@@ -360,6 +360,37 @@ html, body {
 }
 .bakat-explore a:active { color: var(--rose-deep); }
 
+/* ─── SUITE NUDGE ─────────────────────── */
+.suite-nudge {
+  padding: 20px 22px 0;
+  border-top: 1px solid rgba(200,64,90,0.12);
+  margin-top: 20px;
+}
+.suite-nudge-text {
+  font-size: 12.5px; color: var(--ink-muted);
+  line-height: 1.75; text-align: center; margin-bottom: 14px;
+}
+.suite-nudge-text em { font-style: normal; color: var(--rose); font-weight: 500; }
+.suite-nudge-list { display: flex; flex-direction: column; gap: 8px; }
+.suite-nudge-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px; border-radius: 12px;
+  background: rgba(200,64,90,0.05);
+  border: 1px solid rgba(200,64,90,0.14);
+  cursor: pointer; text-align: left;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  width: 100%; transition: background 0.18s;
+}
+.suite-nudge-item:hover { background: rgba(200,64,90,0.10); }
+.suite-nudge-item-info { flex: 1; min-width: 0; }
+.suite-nudge-item-name {
+  font-size: 12.5px; font-weight: 600;
+  color: var(--rose); margin-bottom: 2px;
+}
+.suite-nudge-item-desc { font-size: 11px; color: var(--ink-muted); line-height: 1.4; }
+.suite-nudge-item-icon { font-size: 20px; flex-shrink: 0; }
+.suite-nudge-item-arrow { font-size: 14px; color: var(--rose); flex-shrink: 0; }
+
 /* ─── TOAST ───────────────────────────── */
 .toast {
   position: fixed; bottom: calc(32px + env(safe-area-inset-bottom));
@@ -529,6 +560,29 @@ html, body {
         </svg>
       </button>
 
+    </div>
+  </div>
+
+  <!-- ── SUITE NUDGE ───────────────────── -->
+  <div class="suite-nudge">
+    <p class="suite-nudge-text">Conflict Language baru satu sisi dari cara kamu mencintai. <em>Explore lebih jauh.</em></p>
+    <div class="suite-nudge-list">
+      <button class="suite-nudge-item" onclick="">
+        <span class="suite-nudge-item-icon">💌</span>
+        <div class="suite-nudge-item-info">
+          <div class="suite-nudge-item-name">Love Language</div>
+          <div class="suite-nudge-item-desc">Cara kamu memberi dan menerima cinta — dalam kata-kata, sentuhan, atau waktu?</div>
+        </div>
+        <span class="suite-nudge-item-arrow">→</span>
+      </button>
+      <button class="suite-nudge-item" onclick="">
+        <span class="suite-nudge-item-icon">❤️</span>
+        <div class="suite-nudge-item-info">
+          <div class="suite-nudge-item-name">Love Type</div>
+          <div class="suite-nudge-item-desc">Kamu jatuh cinta seperti apa — intim, penuh gairah, atau komitmen?</div>
+        </div>
+        <span class="suite-nudge-item-arrow">→</span>
+      </button>
     </div>
   </div>
 
