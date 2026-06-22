@@ -1,0 +1,1212 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Conflict Language – bakat.id</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  font-family: 'Poppins', sans-serif;
+  background: #0d0820; color: #fff;
+  height: 100dvh; overflow: hidden;
+}
+.bg {
+  position: fixed; inset: 0; z-index: 0;
+  background: linear-gradient(135deg, #2d1b69, #7b2fbe, #c054a0, #ff5b00, #ffba01, #00cbd0, #2d1b69);
+  background-size: 400% 400%;
+  animation: gradientShift 10s ease infinite;
+  opacity: 0.22;
+}
+@keyframes gradientShift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.app {
+  position: relative; z-index: 1;
+  display: flex; flex-direction: column;
+  height: 100dvh; max-width: 430px; margin: 0 auto; width: 100%;
+}
+
+/* ── HEADER ─────────────────────────────── */
+.header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px 10px; flex-shrink: 0;
+}
+.logo      { font-size: 16px; font-weight: 700; letter-spacing: 0.02em; }
+.lang      { font-size: 12px; font-weight: 600; opacity: 0.8; cursor: pointer; }
+.q-counter { font-size: 11px; font-weight: 700; opacity: 0.45; letter-spacing: 0.04em; }
+
+/* ── PROGRESS BAR ───────────────────────── */
+.progress-wrap { padding: 0 20px 2px; flex-shrink: 0; }
+.progress-track { height: 3px; border-radius: 3px; background: rgba(255,255,255,0.10); overflow: hidden; }
+.progress-fill {
+  height: 100%; border-radius: 3px;
+  background: linear-gradient(90deg, #C080F4, #FF4B8B);
+  transition: width 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── QUESTION ───────────────────────────── */
+.question-wrap { flex-shrink: 0; padding: 16px 24px 8px; }
+.q-eyebrow {
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: #C080F4; margin-bottom: 5px;
+  transition: color 0.3s;
+}
+.q-eyebrow.rank   { color: #FFBA01; }
+.q-eyebrow.binary { color: #FF4B8B; }
+.q-eyebrow.split  { color: #00CBD0; }
+.q-text {
+  font-size: clamp(18px, 5.2vw, 22px);
+  font-weight: 800; letter-spacing: -0.03em; line-height: 1.15;
+  text-transform: uppercase; transition: opacity 0.22s ease;
+}
+
+/* ══════════════════════════════════════════
+   SWIPE — stacked deck
+══════════════════════════════════════════ */
+.cards-stage {
+  flex: 1; min-height: 0; position: relative;
+  display: flex; align-items: center; justify-content: center;
+  perspective: 1000px; user-select: none;
+}
+.card {
+  position: absolute;
+  width: 200px; height: 268px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #fff 0%, #e0e0e0 100%);
+  padding: 8px;
+  box-shadow:
+    rgba(255,255,255,0.5) 2px 2px 2px inset,
+    rgba(0,0,0,0.35) -2px -2px 2px inset,
+    rgba(0,0,0,0.55) 0 18px 44px;
+  cursor: pointer; touch-action: none;
+  transition: transform 0.38s cubic-bezier(0.25,1,0.5,1),
+              box-shadow 0.38s ease, opacity 0.38s ease;
+}
+.card[data-pos="center"] {
+  z-index: 10; opacity: 1; cursor: grab;
+  transform: translate3d(0,0,0) rotate(0deg);
+  box-shadow:
+    rgba(255,255,255,0.55) 0 0 26px 5px,
+    rgba(255,255,255,0.5)  2px 2px 2px inset,
+    rgba(0,0,0,0.25)      -2px -2px 2px inset,
+    rgba(0,0,0,0.5)        0 18px 44px;
+}
+.card[data-pos="center"]:active { cursor: grabbing; }
+.card[data-pos="left"]      { z-index:5; transform:translate3d(-128px,0,-480px) rotate(-16deg); opacity:0.88; }
+.card[data-pos="right"]     { z-index:5; transform:translate3d( 128px,0,-480px) rotate( 16deg); opacity:0.88; }
+.card[data-pos="far-left"]  { z-index:2; transform:translate3d(-180px,0,-700px) rotate(-24deg); opacity:0.45; pointer-events:none; }
+.card[data-pos="far-right"] { z-index:2; transform:translate3d( 180px,0,-700px) rotate( 24deg); opacity:0.45; pointer-events:none; }
+.card[data-pos="hidden"]    { z-index:0; transform:translate3d(0,0,-900px) rotate(0deg); opacity:0; pointer-events:none; }
+
+.card.is-selected[data-pos="center"] {
+  box-shadow:
+    rgba(255,140,0,0.7) 0 0 36px 8px,
+    rgba(255,255,255,0.5) 2px 2px 2px inset,
+    rgba(0,0,0,0.25)    -2px -2px 2px inset;
+}
+.card.dragging { transition: none !important; }
+.card[data-pos="center"].hint-right { box-shadow: rgba(0,203,208,0.65) 0 0 32px 8px, rgba(255,255,255,0.5) 2px 2px 2px inset; }
+.card[data-pos="center"].hint-left  { box-shadow: rgba(255,91,0, 0.65) 0 0 32px 8px, rgba(255,255,255,0.5) 2px 2px 2px inset; }
+
+/* swipe checkmark badge */
+.card-check {
+  position: absolute; top: 10px; right: 10px;
+  width: 26px; height: 26px; border-radius: 50%;
+  background: linear-gradient(135deg, #FF8C00, #E05000);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.45);
+  opacity: 0; transform: scale(0.5);
+  transition: opacity 0.22s, transform 0.22s cubic-bezier(0.34,1.4,0.64,1);
+  z-index: 20; pointer-events: none;
+}
+.card.is-selected[data-pos="center"] .card-check { opacity:1; transform:scale(1); }
+
+/* ══════════════════════════════════════════
+   RANK — vertical tap-to-rank list
+══════════════════════════════════════════ */
+.cards-stage.rank-mode {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 18px 8px;
+  perspective: none;
+  align-items: stretch;
+  justify-content: center;
+}
+.rank-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.07);
+  border: 1.5px solid rgba(255,255,255,0.10);
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.18s ease;
+}
+.rank-row:active { transform: scale(0.97); }
+.rank-row.rank-done {
+  border-color: rgba(255,140,0,0.55);
+  box-shadow: 0 0 20px rgba(255,140,0,0.22);
+}
+.rank-row-badge {
+  width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+  background: rgba(255,255,255,0.08);
+  border: 1.5px solid rgba(255,255,255,0.18);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 900; color: #fff;
+  transition: background 0.25s, border-color 0.25s,
+              transform 0.35s cubic-bezier(0.34,1.6,0.64,1);
+}
+.rank-row-badge:empty::after {
+  content: '';
+  display: block;
+  width: 6px; height: 6px; border-radius: 50%;
+  background: rgba(255,255,255,0.30);
+}
+.rank-row.rank-done .rank-row-badge {
+  background: linear-gradient(135deg, #FF8C00, #E05000);
+  border-color: transparent;
+  transform: scale(1.08);
+}
+.rank-row-label {
+  font-size: 15px; font-weight: 600; line-height: 1.35;
+  color: rgba(255,255,255,0.88);
+}
+
+/* rank-strip kept in DOM but never shown */
+.rank-strip { display: none !important; }
+
+/* ══════════════════════════════════════════
+   BINARY — 2-card this-or-that layout
+══════════════════════════════════════════ */
+.cards-stage.binary-mode {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  padding: 12px 16px 10px;
+  gap: 0;
+  perspective: none;
+}
+.binary-mode .card {
+  position: relative;
+  flex: 1;
+  height: 100%;
+  min-height: 210px;
+  transform: scale(1) translateY(0px) !important;
+  opacity: 1 !important;
+  cursor: pointer;
+  transition:
+    transform 0.38s cubic-bezier(0.25,1,0.5,1),
+    box-shadow 0.38s ease,
+    opacity    0.38s ease;
+  touch-action: auto;
+}
+.binary-mode .card.b-selected {
+  transform: scale(1.05) translateY(-8px) !important;
+  box-shadow:
+    rgba(255,140,0,0.70) 0 0 36px 10px,
+    rgba(255,255,255,0.5) 2px 2px 2px inset,
+    rgba(0,0,0,0.20)    -2px -2px 2px inset !important;
+}
+.binary-mode .card.b-unselected {
+  transform: scale(0.91) translateY(8px) !important;
+  opacity: 0.40 !important;
+}
+.binary-mode .card.b-selected .card-check { opacity:1; transform:scale(1); }
+
+/* VS divider between the two binary cards */
+.vs-divider {
+  width: 52px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 15;
+  pointer-events: none;
+}
+.vs-divider::before,
+.vs-divider::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1px;
+  background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.28), transparent);
+}
+.vs-divider::before { top: 0;              bottom: calc(50% + 22px); }
+.vs-divider::after  { top: calc(50% + 22px); bottom: 0; }
+.vs-label {
+  width: 38px; height: 38px; border-radius: 50%;
+  background: rgba(255,255,255,0.07);
+  border: 1.5px solid rgba(255,255,255,0.22);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 900; letter-spacing: 0.07em;
+  color: rgba(255,255,255,0.65);
+}
+
+/* ══════════════════════════════════════════
+   SPLIT — diagonal screen divide
+══════════════════════════════════════════ */
+.cards-stage.split-mode {
+  flex: 1; min-height: 0;
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+  margin: 10px 16px 6px;
+  perspective: none;
+  display: block;
+}
+.split-half {
+  position: absolute; inset: 0;
+  cursor: pointer;
+  transition: clip-path 0.48s cubic-bezier(0.4,0,0.2,1),
+              filter     0.38s ease;
+  will-change: clip-path;
+}
+/* neutral 50/50 diagonal: blade runs top-57% → bottom-42% */
+.split-half-a { clip-path: polygon(0 0, 57% 0, 42% 100%, 0 100%); }
+.split-half-b { clip-path: polygon(57% 0, 100% 0, 100% 100%, 42% 100%); }
+
+/* A selected → blade shifts right */
+.split-mode.sel-a .split-half-a { clip-path: polygon(0 0, 71% 0, 56% 100%, 0 100%); }
+.split-mode.sel-a .split-half-b { clip-path: polygon(71% 0, 100% 0, 100% 100%, 56% 100%); filter: brightness(0.45); }
+/* B selected → blade shifts left */
+.split-mode.sel-b .split-half-a { clip-path: polygon(0 0, 43% 0, 28% 100%, 0 100%); filter: brightness(0.45); }
+.split-mode.sel-b .split-half-b { clip-path: polygon(43% 0, 100% 0, 100% 100%, 28% 100%); }
+
+.split-bg { position: absolute; inset: 0; }
+
+.split-label {
+  position: absolute; bottom: 22%;
+  font-size: 13px; font-weight: 700; color: #fff;
+  line-height: 1.35; text-align: center;
+  text-shadow: 0 1px 5px rgba(0,0,0,0.7);
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+.split-half-a .split-label { left: 5%; width: 40%; }
+.split-half-b .split-label { right: 5%; width: 40%; }
+
+.split-check {
+  position: absolute; top: 14px;
+  width: 30px; height: 30px; border-radius: 50%;
+  background: linear-gradient(135deg, #FF8C00, #E05000);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 800; color: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  opacity: 0; transform: scale(0.3) rotate(-30deg);
+  transition: opacity 0.25s, transform 0.4s cubic-bezier(0.34,1.6,0.64,1);
+  pointer-events: none; z-index: 10;
+}
+.split-half-a .split-check { left: 12px; }
+.split-half-b .split-check { right: 12px; }
+.split-mode.sel-a .split-half-a .split-check,
+.split-mode.sel-b .split-half-b .split-check { opacity: 1; transform: scale(1) rotate(0deg); }
+
+.split-blade {
+  position: absolute; inset: 0;
+  pointer-events: none; z-index: 8;
+  transition: opacity 0.3s;
+}
+
+/* ── SHARED CARD INNER ───────────────────── */
+.card-inner { width:100%; height:100%; border-radius:9px; overflow:hidden; position:relative; }
+.ci-bg { position:absolute; inset:0; }
+.ci-gl { position:absolute; bottom:0; left:-40%; width:180%; height:65%; background:radial-gradient(50% 50%,#ff5b00 20%,rgba(255,91,0,0)); opacity:0.85; pointer-events:none; }
+.ci-gr { position:absolute; bottom:0; right:-40%; width:130%; height:55%; background:radial-gradient(50% 50%,#422fb7,rgba(66,47,183,0)); opacity:0.85; pointer-events:none; }
+.ci-gc { position:absolute; bottom:-5%; left:10%; width:80%; height:40%; background:radial-gradient(50% 50%,#ffba01,rgba(255,186,1,0)); opacity:0.85; pointer-events:none; }
+.ci-label {
+  position:absolute; bottom:0; left:0; right:0;
+  padding:32px 10px 12px;
+  background:linear-gradient(transparent,rgba(0,0,0,0.72));
+  font-size:12px; font-weight:700; color:#fff;
+  text-align:center; line-height:1.3;
+  text-shadow:0 1px 3px rgba(0,0,0,0.7);
+}
+
+/* ── SWIPE HINT (hidden on rank) ─────────── */
+.swipe-hint {
+  flex-shrink: 0; text-align: center; padding: 0 0 4px;
+  font-size: 11px; font-weight: 600; opacity: 0.45; letter-spacing: 0.04em;
+  transition: opacity 0.2s;
+}
+.swipe-hint.hidden { opacity: 0; pointer-events: none; }
+
+/* ── BOTTOM ─────────────────────────────── */
+.bottom {
+  flex-shrink: 0;
+  padding: 8px 22px calc(24px + env(safe-area-inset-bottom));
+  display: flex; flex-direction: column; align-items: center; gap: 9px;
+}
+.dots { display:flex; gap:7px; align-items:center; height:10px; }
+.dot  { width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,0.22); transition:background 0.22s,transform 0.22s; }
+.dot.active { background:rgba(255,255,255,0.88); transform:scale(1.25); }
+
+.hint-text {
+  font-size: 12.5px; font-weight: 500;
+  opacity: 0.5; text-align: center; min-height: 20px;
+  transition: opacity 0.2s;
+}
+.hint-text.selected { opacity: 0.92; }
+
+/* ══════════════════════════════════════════
+   3D SCENE LAYER
+══════════════════════════════════════════ */
+.scene-layer {
+  position: fixed; top: 0; bottom: 0;
+  left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 430px;
+  z-index: 0; pointer-events: none; overflow: hidden;
+}
+.scene {
+  position: absolute; inset: 0;
+  opacity: 0; transition: opacity 0.75s ease;
+  pointer-events: none;
+}
+.scene.active { opacity: 1; }
+.fobj { position: absolute; }
+
+/* ── float / rotation keyframes ─── */
+@keyframes floatA {
+  0%,100% { transform: translateY(0px) rotate(0deg); }
+  50%      { transform: translateY(-20px) rotate(6deg); }
+}
+@keyframes floatB {
+  0%,100% { transform: translateY(0px) rotate(0deg); }
+  50%      { transform: translateY(-14px) rotate(-5deg); }
+}
+@keyframes floatC {
+  0%,100% { transform: translateY(-7px) rotate(3deg); }
+  50%      { transform: translateY(12px) rotate(-3deg); }
+}
+@keyframes floatD {
+  0%,100% { transform: translateY(0px) rotate(0deg) scale(1); }
+  50%      { transform: translateY(-10px) rotate(2deg) scale(1.04); }
+}
+@keyframes rotateCW  { from { transform: rotate(0deg);    } to { transform: rotate(360deg);  } }
+@keyframes rotateCCW { from { transform: rotate(0deg);    } to { transform: rotate(-360deg); } }
+@keyframes orbitIn   { 0%,100% { transform: translateX(0px); } 50% { transform: translateX(22px); } }
+@keyframes orbitOut  { 0%,100% { transform: translateX(0px); } 50% { transform: translateX(-22px); } }
+@keyframes shimmer   { 0%,100% { opacity: 0.55; } 50% { opacity: 1; } }
+
+.next-btn {
+  display:flex; align-items:center;
+  background:linear-gradient(180deg,#fff 0%,#e7e7e7 100%);
+  border:none; border-radius:50px; padding:6px;
+  box-shadow:rgba(255,255,255,0.5) 2px 2px 2px inset,rgba(0,0,0,0.25) -2px -2px 2px inset;
+  cursor:pointer; font-family:'Poppins',sans-serif; font-weight:700; font-size:15px;
+  width:100%; opacity:0.32; pointer-events:none;
+  transition:opacity 0.28s,transform 0.18s;
+}
+.next-btn.active { opacity:1; pointer-events:all; }
+.next-btn.active:active { transform:scale(0.97); }
+.next-label { color:#1a1a2e; flex:1; text-align:center; margin:0 4px 0 18px; }
+.next-icon {
+  background:linear-gradient(180deg,#FF4B8B 0%,#C054A0 100%);
+  border-radius:50px; padding:12px 22px;
+  color:#fff; font-size:18px; line-height:1;
+  box-shadow:rgba(255,255,255,0.4) 1px 2px 2px inset,rgba(0,0,0,0.25) -1px -2px 2px inset;
+}
+</style>
+</head>
+<body>
+<div class="bg"></div>
+
+<!-- ╔═══════════════════════════════════════╗
+     ║  3D CONTEXTUAL SCENE OBJECTS          ║
+     ╚═══════════════════════════════════════╝ -->
+<div class="scene-layer" id="scene-layer">
+
+  <!-- ── Q0: CONFLICT — crystal shards ─── -->
+  <div class="scene" id="sc0">
+    <!-- Left shard cluster: red/orange spikes leaning right -->
+    <div class="fobj" style="left:-8px; top:27%; animation:floatA 6s ease-in-out infinite;">
+      <svg width="105" height="155" viewBox="0 0 105 155" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="52,0 8,155 28,128 52,155 76,128 96,155" fill="rgba(200,30,0,0.10)" stroke="rgba(255,70,0,0.50)" stroke-width="1.5"/>
+        <polygon points="22,35 0,155 40,115" fill="rgba(255,110,0,0.09)" stroke="rgba(255,130,0,0.38)" stroke-width="1.2"/>
+        <polygon points="75,20 62,155 100,110" fill="rgba(180,20,0,0.08)" stroke="rgba(220,60,0,0.32)" stroke-width="1.2"/>
+        <line x1="52" y1="0" x2="52" y2="155" stroke="rgba(255,90,0,0.18)" stroke-width="0.8"/>
+      </svg>
+    </div>
+    <!-- Right shard cluster: mirrored, offset timing -->
+    <div class="fobj" style="right:-6px; top:34%; animation:floatB 7s ease-in-out infinite 1.4s; transform:scaleX(-1);">
+      <svg width="90" height="130" viewBox="0 0 105 155" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="52,0 8,155 28,128 52,155 76,128 96,155" fill="rgba(255,140,0,0.08)" stroke="rgba(255,160,0,0.42)" stroke-width="1.5"/>
+        <polygon points="22,35 0,155 40,115" fill="rgba(255,186,1,0.07)" stroke="rgba(255,186,1,0.28)" stroke-width="1"/>
+      </svg>
+    </div>
+    <!-- Glow spark: center -->
+    <div class="fobj" style="left:50%; top:50%; transform:translate(-50%,-50%); animation:shimmer 3s ease-in-out infinite;">
+      <svg width="120" height="120" viewBox="0 0 120 120" fill="none">
+        <circle cx="60" cy="60" r="44" fill="none" stroke="rgba(255,80,0,0.08)" stroke-width="28"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- ── Q1: FRUSTRATION — cracked orb + burst ─── -->
+  <div class="scene" id="sc1">
+    <!-- Cracked orb upper-right -->
+    <div class="fobj" style="right:12px; top:24%; animation:floatA 5.5s ease-in-out infinite 0.6s;">
+      <svg width="95" height="95" viewBox="0 0 95 95" fill="none">
+        <circle cx="47.5" cy="47.5" r="42" fill="rgba(255,100,30,0.10)" stroke="rgba(255,130,61,0.45)" stroke-width="2"/>
+        <circle cx="47.5" cy="47.5" r="32" fill="none" stroke="rgba(255,150,61,0.20)" stroke-width="1"/>
+        <!-- crack lines -->
+        <path d="M47,6 L40,28 L52,32 L42,55 L54,60 L46,90" stroke="rgba(255,186,1,0.55)" stroke-width="1.5" fill="none"/>
+        <path d="M80,28 L62,38 L70,47 L48,58" stroke="rgba(255,140,0,0.4)" stroke-width="1.2" fill="none"/>
+        <path d="M15,50 L32,45 L26,36 L44,28" stroke="rgba(255,100,0,0.35)" stroke-width="1" fill="none"/>
+        <!-- glow center -->
+        <circle cx="47.5" cy="47.5" r="16" fill="rgba(255,140,0,0.12)"/>
+      </svg>
+    </div>
+    <!-- Starburst / explosion lower-left -->
+    <div class="fobj" style="left:10px; bottom:28%; animation:floatC 4.8s ease-in-out infinite;">
+      <svg width="72" height="72" viewBox="0 0 72 72" fill="none">
+        <polygon points="36,2 40,26 58,8 44,28 68,28 48,38 64,54 42,44 44,70 34,48 16,66 28,44 4,52 24,38 6,22 30,30" fill="rgba(255,186,1,0.12)" stroke="rgba(255,186,1,0.48)" stroke-width="1.2"/>
+      </svg>
+    </div>
+    <!-- Small floating dot -->
+    <div class="fobj" style="left:22%; top:26%; animation:floatD 4s ease-in-out infinite 0.9s;">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+        <circle cx="11" cy="11" r="9" fill="rgba(255,130,61,0.18)" stroke="rgba(255,130,61,0.5)" stroke-width="1.5"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- ── Q2: RANKING — floating gem diamonds ─── -->
+  <div class="scene" id="sc2">
+    <!-- Large diamond upper-left -->
+    <div class="fobj" style="left:10px; top:22%; animation:floatA 6.5s ease-in-out infinite;">
+      <svg width="88" height="100" viewBox="0 0 88 100" fill="none">
+        <polygon points="44,0 88,36 44,100 0,36" fill="rgba(255,186,1,0.12)" stroke="rgba(255,186,1,0.52)" stroke-width="1.5"/>
+        <!-- inner facets -->
+        <polygon points="44,0 88,36 44,52 0,36" fill="rgba(255,220,0,0.10)"/>
+        <line x1="44" y1="0" x2="44" y2="100" stroke="rgba(255,186,1,0.22)" stroke-width="1"/>
+        <line x1="0" y1="36" x2="88" y2="36" stroke="rgba(255,186,1,0.18)" stroke-width="1"/>
+      </svg>
+    </div>
+    <!-- Medium diamond right -->
+    <div class="fobj" style="right:8px; bottom:32%; animation:floatB 5.8s ease-in-out infinite 1.2s;">
+      <svg width="62" height="72" viewBox="0 0 88 100" fill="none">
+        <polygon points="44,0 88,36 44,100 0,36" fill="rgba(200,120,0,0.10)" stroke="rgba(210,130,0,0.42)" stroke-width="1.5"/>
+        <polygon points="44,0 88,36 44,52 0,36" fill="rgba(180,100,0,0.08)"/>
+      </svg>
+    </div>
+    <!-- Small diamond top-right -->
+    <div class="fobj" style="right:20%; top:24%; animation:floatC 4.5s ease-in-out infinite 0.5s;">
+      <svg width="36" height="42" viewBox="0 0 88 100" fill="none">
+        <polygon points="44,0 88,36 44,100 0,36" fill="rgba(255,200,0,0.10)" stroke="rgba(255,200,0,0.48)" stroke-width="2"/>
+      </svg>
+    </div>
+    <!-- Orbit ring (background depth) -->
+    <div class="fobj" style="left:50%; top:50%; transform:translate(-50%,-50%) perspective(300px) rotateX(62deg); animation:rotateCW 18s linear infinite;">
+      <svg width="140" height="140" viewBox="0 0 140 140" fill="none">
+        <circle cx="70" cy="70" r="62" stroke="rgba(255,186,1,0.12)" stroke-width="2" stroke-dasharray="10 6"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- ── Q3: RECONCILIATION — twin crescents ─── -->
+  <div class="scene" id="sc3">
+    <!-- Pink crescent left -->
+    <div class="fobj" style="left:4px; top:26%; animation:floatA 6s ease-in-out infinite; animation-delay:0s;">
+      <svg width="82" height="90" viewBox="0 0 82 90" fill="none">
+        <path d="M68,45 A38,38,0,1,1,40,7 A26,26,0,1,0,68,45Z" fill="rgba(255,75,139,0.12)" stroke="rgba(255,75,139,0.52)" stroke-width="1.8"/>
+        <!-- inner crescent -->
+        <path d="M58,45 A28,28,0,1,1,38,17 A18,18,0,1,0,58,45Z" fill="rgba(255,75,139,0.06)" stroke="rgba(255,75,139,0.22)" stroke-width="1"/>
+      </svg>
+    </div>
+    <!-- Teal crescent right -->
+    <div class="fobj" style="right:4px; bottom:26%; animation:floatB 6.5s ease-in-out infinite 1.5s; transform:scaleX(-1) scaleY(-1);">
+      <svg width="82" height="90" viewBox="0 0 82 90" fill="none">
+        <path d="M68,45 A38,38,0,1,1,40,7 A26,26,0,1,0,68,45Z" fill="rgba(0,203,208,0.10)" stroke="rgba(0,203,208,0.48)" stroke-width="1.8"/>
+        <path d="M58,45 A28,28,0,1,1,38,17 A18,18,0,1,0,58,45Z" fill="rgba(0,203,208,0.05)" stroke="rgba(0,203,208,0.20)" stroke-width="1"/>
+      </svg>
+    </div>
+    <!-- Floating heart outline center -->
+    <div class="fobj" style="left:50%; top:26%; transform:translateX(-50%); animation:floatD 4.8s ease-in-out infinite 0.8s;">
+      <svg width="44" height="40" viewBox="0 0 44 40" fill="none">
+        <path d="M22,35 C16,29 2,20 2,10 A10,10,0,0,1,22,8 A10,10,0,0,1,42,10 C42,20 28,29 22,35Z" fill="rgba(255,75,139,0.10)" stroke="rgba(255,75,139,0.45)" stroke-width="1.6"/>
+      </svg>
+    </div>
+    <!-- Small teal dot -->
+    <div class="fobj" style="right:18%; top:28%; animation:floatC 3.8s ease-in-out infinite 0.3s;">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+        <circle cx="9" cy="9" r="7" fill="rgba(0,203,208,0.15)" stroke="rgba(0,203,208,0.5)" stroke-width="1.5"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- ── Q4: COMPLEXITY — tilted concentric rings ─── -->
+  <div class="scene" id="sc4">
+    <!-- Tilted ring system (perspective top view) -->
+    <div class="fobj" style="left:50%; top:30%; transform:translateX(-50%);">
+      <div style="animation:rotateCW 22s linear infinite; transform-origin:center; perspective:280px; transform:perspective(280px) rotateX(60deg);">
+        <svg width="150" height="150" viewBox="0 0 150 150" fill="none">
+          <circle cx="75" cy="75" r="68" stroke="rgba(192,84,160,0.32)" stroke-width="2.5"/>
+          <circle cx="75" cy="75" r="52" stroke="rgba(123,47,190,0.40)" stroke-width="2"/>
+          <circle cx="75" cy="75" r="34" stroke="rgba(66,47,183,0.48)" stroke-width="2"/>
+          <circle cx="75" cy="75" r="16" fill="rgba(66,47,183,0.12)" stroke="rgba(66,47,183,0.4)" stroke-width="1.5"/>
+        </svg>
+      </div>
+    </div>
+    <!-- Counter-rotating dashed ring upper-right -->
+    <div class="fobj" style="right:10px; top:24%; animation:floatA 5s ease-in-out infinite;">
+      <div style="animation:rotateCCW 12s linear infinite;">
+        <svg width="55" height="55" viewBox="0 0 55 55" fill="none">
+          <circle cx="27.5" cy="27.5" r="24" stroke="rgba(192,84,160,0.42)" stroke-width="1.5" stroke-dasharray="7 4"/>
+        </svg>
+      </div>
+    </div>
+    <!-- Spiral lower-right -->
+    <div class="fobj" style="right:8px; bottom:28%; animation:floatB 6s ease-in-out infinite 1s;">
+      <svg width="60" height="60" viewBox="0 0 60 60" fill="none">
+        <path d="M30,30 m0,-22 a22,22,0,1,1,-22,22 a16,16,0,1,0,16,-16 a10,10,0,1,1,-10,10" stroke="rgba(123,47,190,0.42)" stroke-width="1.5" fill="none"/>
+      </svg>
+    </div>
+    <!-- Small orbit dot -->
+    <div class="fobj" style="left:12%; bottom:34%; animation:floatC 4.2s ease-in-out infinite 0.5s;">
+      <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+        <circle cx="13" cy="13" r="11" fill="rgba(192,84,160,0.12)" stroke="rgba(192,84,160,0.48)" stroke-width="1.5"/>
+        <circle cx="13" cy="13" r="5" fill="rgba(66,47,183,0.20)"/>
+      </svg>
+    </div>
+  </div>
+
+
+  <!-- ── Q5: SPLIT — pink/teal diagonal arcs ─── -->
+  <div class="scene" id="sc5">
+    <!-- Pink crescent upper-left -->
+    <div class="fobj" style="left:4px; top:26%; animation:floatA 6s ease-in-out infinite;">
+      <svg width="88" height="88" viewBox="0 0 88 88" fill="none">
+        <path d="M82,44 A44,44,0,1,1,44,0 A31,31,0,1,0,78,34Z" fill="rgba(255,75,139,0.10)" stroke="rgba(255,75,139,0.45)" stroke-width="1.8" transform="rotate(-20 44 44)"/>
+      </svg>
+    </div>
+    <!-- Teal crescent lower-right -->
+    <div class="fobj" style="right:4px; bottom:24%; animation:floatB 5.8s ease-in-out infinite 1.3s; transform:rotate(180deg);">
+      <svg width="88" height="88" viewBox="0 0 88 88" fill="none">
+        <path d="M82,44 A44,44,0,1,1,44,0 A31,31,0,1,0,78,34Z" fill="rgba(0,203,208,0.09)" stroke="rgba(0,203,208,0.43)" stroke-width="1.8" transform="rotate(-20 44 44)"/>
+      </svg>
+    </div>
+    <!-- Glowing diagonal blade hint -->
+    <div class="fobj" style="left:40%; top:26%; transform:rotate(15deg); animation:shimmer 3.5s ease-in-out infinite;">
+      <svg width="3" height="185" viewBox="0 0 3 185" fill="none">
+        <defs>
+          <linearGradient id="bg-blade" x1="0" y1="0" x2="0" y2="185" gradientUnits="userSpaceOnUse">
+            <stop offset="0%"   stop-color="rgba(255,255,255,0)"/>
+            <stop offset="40%"  stop-color="rgba(255,255,255,0.18)"/>
+            <stop offset="60%"  stop-color="rgba(255,255,255,0.18)"/>
+            <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+          </linearGradient>
+        </defs>
+        <rect width="3" height="185" fill="url(#bg-blade)"/>
+      </svg>
+    </div>
+    <div class="fobj" style="left:15%; top:22%; animation:floatC 4s ease-in-out infinite 0.4s;">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+        <circle cx="11" cy="11" r="9" fill="rgba(255,75,139,0.15)" stroke="rgba(255,75,139,0.5)" stroke-width="1.5"/>
+      </svg>
+    </div>
+    <div class="fobj" style="right:15%; bottom:22%; animation:floatD 3.8s ease-in-out infinite 1s;">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+        <circle cx="11" cy="11" r="9" fill="rgba(0,203,208,0.15)" stroke="rgba(0,203,208,0.5)" stroke-width="1.5"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- ── Q6: SWIPE (last) — purple tangled rings ─── -->
+  <div class="scene" id="sc6">
+    <div class="fobj" style="left:50%; top:30%; transform:translateX(-50%);">
+      <div style="animation:rotateCW 25s linear infinite; transform-origin:center; perspective:300px; transform:perspective(300px) rotateX(58deg);">
+        <svg width="140" height="140" viewBox="0 0 140 140" fill="none">
+          <circle cx="70" cy="70" r="64" stroke="rgba(192,84,160,0.28)" stroke-width="2.5"/>
+          <circle cx="70" cy="70" r="48" stroke="rgba(123,47,190,0.36)" stroke-width="2"/>
+          <circle cx="70" cy="70" r="30" stroke="rgba(66,47,183,0.44)" stroke-width="2"/>
+        </svg>
+      </div>
+    </div>
+    <div class="fobj" style="right:10px; top:24%; animation:floatA 5s ease-in-out infinite;">
+      <div style="animation:rotateCCW 12s linear infinite;">
+        <svg width="50" height="50" viewBox="0 0 50 50" fill="none">
+          <circle cx="25" cy="25" r="22" stroke="rgba(192,84,160,0.42)" stroke-width="1.5" stroke-dasharray="7 4"/>
+        </svg>
+      </div>
+    </div>
+    <div class="fobj" style="left:8px; bottom:28%; animation:floatB 5.5s ease-in-out infinite 1s;">
+      <svg width="50" height="50" viewBox="0 0 60 60" fill="none">
+        <path d="M30,30 m0,-20 a20,20,0,1,1,-20,20 a14,14,0,1,0,14,-14 a9,9,0,1,1,-9,9" stroke="rgba(123,47,190,0.42)" stroke-width="1.5" fill="none"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- ── BINARY — opposing force wedges ─── -->
+  <div class="scene" id="sc-binary">
+    <!-- Left wedge (pink) pointing right -->
+    <div class="fobj" style="left:-12px; top:32%; animation:floatA 5.5s ease-in-out infinite;">
+      <svg width="110" height="88" viewBox="0 0 110 88" fill="none">
+        <polygon points="0,0 110,44 0,88" fill="rgba(255,75,139,0.10)" stroke="rgba(255,75,139,0.48)" stroke-width="1.5"/>
+        <polygon points="0,10 88,44 0,78" fill="rgba(255,75,139,0.06)" stroke="rgba(255,75,139,0.22)" stroke-width="1"/>
+        <line x1="0" y1="44" x2="110" y2="44" stroke="rgba(255,75,139,0.18)" stroke-width="0.8"/>
+      </svg>
+    </div>
+    <!-- Right wedge (deep blue) pointing left -->
+    <div class="fobj" style="right:-12px; top:32%; animation:floatB 6.2s ease-in-out infinite 1.2s; transform:scaleX(-1);">
+      <svg width="110" height="88" viewBox="0 0 110 88" fill="none">
+        <polygon points="0,0 110,44 0,88" fill="rgba(66,47,183,0.10)" stroke="rgba(66,47,183,0.48)" stroke-width="1.5"/>
+        <polygon points="0,10 88,44 0,78" fill="rgba(66,47,183,0.06)" stroke="rgba(66,47,183,0.22)" stroke-width="1"/>
+        <line x1="0" y1="44" x2="110" y2="44" stroke="rgba(66,47,183,0.18)" stroke-width="0.8"/>
+      </svg>
+    </div>
+    <!-- Centre glow spark -->
+    <div class="fobj" style="left:50%; top:48%; transform:translate(-50%,-50%); animation:shimmer 2.8s ease-in-out infinite;">
+      <svg width="70" height="70" viewBox="0 0 70 70" fill="none">
+        <circle cx="35" cy="35" r="28" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="20"/>
+        <circle cx="35" cy="35" r="7" fill="rgba(255,255,255,0.08)"/>
+      </svg>
+    </div>
+    <!-- Small accent wedge top-right -->
+    <div class="fobj" style="right:16%; top:22%; animation:floatC 4.2s ease-in-out infinite 0.5s;">
+      <svg width="42" height="34" viewBox="0 0 110 88" fill="none">
+        <polygon points="0,0 110,44 0,88" fill="rgba(192,84,160,0.08)" stroke="rgba(192,84,160,0.38)" stroke-width="2"/>
+      </svg>
+    </div>
+  </div>
+
+</div>
+
+<div class="app">
+
+  <div class="header">
+    <div class="logo">bakat.id</div>
+    <div class="lang">ID ▾</div>
+    <span class="q-counter" id="q-counter">1 / 5</span>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-track">
+      <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+    </div>
+  </div>
+
+  <div class="question-wrap">
+    <div class="q-eyebrow" id="q-eyebrow">Pertanyaan</div>
+    <div class="q-text" id="q-text"></div>
+  </div>
+
+  <!-- rank progress pips (only visible on rank question) -->
+  <div class="rank-strip" id="rank-strip">
+    <span>Prioritas kamu</span>
+    <div class="rank-strip-pips" id="rank-pips"></div>
+  </div>
+
+  <div class="cards-stage" id="cards-stage"></div>
+
+  <div class="swipe-hint" id="swipe-hint">← geser untuk melihat pilihan lain →</div>
+
+  <div class="bottom">
+    <div class="dots" id="dots"></div>
+    <div class="hint-text" id="hint-text">Tap kartu untuk memilih</div>
+    <button class="next-btn" id="next-btn">
+      <span class="next-label" id="next-label">Pilih dulu</span>
+      <div class="next-icon">→</div>
+    </button>
+  </div>
+
+</div>
+<script>
+const QUESTIONS = [
+  {
+    type: 'swipe',
+    scene: 'sc6',
+    text: "WAKTU BUTUH SPACE,\nKAMU BIASANYA:",
+    cards: [
+      { label: "Bilang langsung\nke pasangan",    color: "linear-gradient(145deg,#3a1000 0%,#8B4000 50%,#FF823D 100%)" },
+      { label: "Menghilang dulu,\nbaru jelasin",  color: "linear-gradient(145deg,#001530 0%,#003060 50%,#422FB7 100%)" },
+    ]
+  },
+  {
+    type: 'split',
+    scene: 'sc5',
+    text: "CARA KAMU\nMINTA MAAF:",
+    cards: [
+      { label: "Langsung bilang\n'Maaf ya'",      color: "linear-gradient(145deg,#1a0010 0%,#6B0030 50%,#FF4B8B 100%)" },
+      { label: "Tunjukkin lewat\ntindakan dulu",  color: "linear-gradient(145deg,#001530 0%,#003060 50%,#00CBD0 100%)" },
+    ]
+  },
+  {
+    type: 'binary',
+    scene: 'sc-binary',
+    text: "KONFLIK YANG LEBIH\nKAMU TAKUTIN:",
+    cards: [
+      { label: "Ribut keras\ntapi cepat kelar",  color: "linear-gradient(145deg,#1a0010 0%,#6B0030 50%,#FF4B8B 100%)" },
+      { label: "Diam-diaman\nbertahan lama",      color: "linear-gradient(145deg,#001530 0%,#003060 50%,#422FB7 100%)" },
+    ]
+  },
+  {
+    type: 'swipe',
+    scene: 'sc0',
+    text: "KALAU LAGI RIBUT,\nKAMU CENDERUNG…",
+    cards: [
+      { label: "Langsung ngomong\nterus terang",   color: "linear-gradient(145deg,#1a0010 0%,#6B0000 40%,#CC2200 70%,#FF5B00 100%)" },
+      { label: "Butuh waktu\nsendiri dulu",        color: "linear-gradient(145deg,#0a0030 0%,#2d1b69 50%,#7b2fbe 100%)" },
+      { label: "Cari solusi\nbareng-bareng",       color: "linear-gradient(145deg,#001a30 0%,#005080 50%,#00CBD0 100%)" },
+      { label: "Diam sampai\nsuasana reda",        color: "linear-gradient(145deg,#0a2010 0%,#1a5030 50%,#4CAF50 100%)" },
+    ]
+  },
+  {
+    type: 'rank',
+    scene: 'sc2',
+    text: "URUTIN DARI YANG\nPALING PENTING:",
+    cards: [
+      { label: "Merasa\ndidengar",        color: "linear-gradient(145deg,#0a1040 0%,#2d1b69 50%,#7b2fbe 100%)" },
+      { label: "Hubungan\ntetap oke",     color: "linear-gradient(145deg,#001a10 0%,#004030 50%,#4CAF50 100%)" },
+      { label: "Masalah\ncepat selesai",  color: "linear-gradient(145deg,#1a1000 0%,#6B4000 50%,#FFBA01 100%)" },
+      { label: "Berasa benar\natau menang", color: "linear-gradient(145deg,#3a0010 0%,#8B0030 50%,#FF5B00 100%)" },
+    ]
+  },
+];
+
+const POS_MAP = ['center','right','far-right','hidden','far-left','left'];
+
+/* ── state ── */
+let currentQ    = 0;
+let centerIdx   = 0;
+let selectedIdx = null;   // swipe questions
+let rankOrder   = [];     // rank question: rankOrder[cardIdx] = 1-4 or null
+let answers     = [];
+
+/* ── drag state ── */
+let dragging  = false;
+let startX    = 0;
+let lastDelta = 0;
+
+/* ═══════════════════════════════════════
+   RENDER
+═══════════════════════════════════════ */
+function render() {
+  const q        = QUESTIONS[currentQ];
+  const isRank   = q.type === 'rank';
+  const isBinary = q.type === 'binary';
+  const isSplit  = q.type === 'split';
+
+  document.getElementById('q-counter').textContent     = `${currentQ + 1} / ${QUESTIONS.length}`;
+  document.getElementById('progress-fill').style.width = (currentQ / QUESTIONS.length * 100) + '%';
+  document.getElementById('q-text').innerHTML          = q.text.replace(/\n/g,'<br>');
+
+  // eyebrow label
+  const eyebrow = document.getElementById('q-eyebrow');
+  eyebrow.textContent = isRank ? 'Urutin prioritasmu 👆' : isBinary ? 'Pilih salah satu 👇' : isSplit ? 'Tap untuk pilih 👇' : 'Pertanyaan';
+  eyebrow.classList.toggle('rank',   isRank);
+  eyebrow.classList.toggle('binary', isBinary);
+  eyebrow.classList.toggle('split',  isSplit);
+
+  // rank strip visibility
+  document.getElementById('rank-strip').classList.toggle('visible', isRank);
+
+  // swipe hint
+  document.getElementById('swipe-hint').classList.toggle('hidden', isRank || isBinary || isSplit);
+
+  // stage mode
+  const stage = document.getElementById('cards-stage');
+  stage.classList.toggle('rank-mode',   isRank);
+  stage.classList.toggle('binary-mode', isBinary);
+  stage.classList.toggle('split-mode',  isSplit);
+  stage.innerHTML = '';
+
+  if (isRank) {
+    rankOrder = new Array(q.cards.length).fill(null);
+    renderRankGrid();
+  } else if (isBinary) {
+    renderBinaryChoice();
+  } else if (isSplit) {
+    renderSplitChoice();
+  } else {
+    renderDeck();
+  }
+
+  renderDots();
+  renderBottom();
+  updateScene(currentQ);
+}
+
+/* ── swipe deck ─────────────────────────── */
+function renderDeck() {
+  const q     = QUESTIONS[currentQ];
+  const stage = document.getElementById('cards-stage');
+
+  q.cards.forEach((c, i) => {
+    const card = document.createElement('div');
+    card.className   = 'card';
+    card.dataset.idx = i;
+    card.innerHTML = `
+      <div class="card-inner">
+        <div class="ci-bg" style="background:${c.color}"></div>
+        <div class="ci-gl"></div><div class="ci-gr"></div><div class="ci-gc"></div>
+        <div class="ci-label">${c.label.replace(/\n/g,'<br>')}</div>
+      </div>
+      <div class="card-check">✓</div>
+    `;
+    stage.appendChild(card);
+  });
+
+  updatePositions();
+}
+
+/* ── binary choice ──────────────────────── */
+function renderBinaryChoice() {
+  const q     = QUESTIONS[currentQ];
+  const stage = document.getElementById('cards-stage');
+
+  q.cards.forEach((c, i) => {
+    const card = document.createElement('div');
+    card.className   = 'card';
+    card.dataset.idx = i;
+    card.innerHTML = `
+      <div class="card-inner">
+        <div class="ci-bg" style="background:${c.color}"></div>
+        <div class="ci-gl"></div><div class="ci-gr"></div><div class="ci-gc"></div>
+        <div class="ci-label">${c.label.replace(/\n/g,'<br>')}</div>
+      </div>
+      <div class="card-check">✓</div>
+    `;
+    stage.appendChild(card);
+    // insert VS divider between the two cards
+    if (i === 0) {
+      const vs = document.createElement('div');
+      vs.className = 'vs-divider';
+      vs.innerHTML = '<div class="vs-label">VS</div>';
+      stage.appendChild(vs);
+    }
+  });
+}
+
+/* ── split choice ───────────────────────── */
+function renderSplitChoice() {
+  const q     = QUESTIONS[currentQ];
+  const stage = document.getElementById('cards-stage');
+
+  const makeHalf = (c, cls, idx) => {
+    const h = document.createElement('div');
+    h.className  = `split-half ${cls}`;
+    h.dataset.idx = idx;
+    h.innerHTML = `
+      <div class="split-bg" style="background:${c.color}">
+        <div class="ci-gl"></div><div class="ci-gr"></div><div class="ci-gc"></div>
+      </div>
+      <div class="split-label">${c.label.replace(/\n/g,'<br>')}</div>
+      <div class="split-check">✓</div>
+    `;
+    return h;
+  };
+
+  stage.appendChild(makeHalf(q.cards[0], 'split-half-a', 0));
+  stage.appendChild(makeHalf(q.cards[1], 'split-half-b', 1));
+
+  // Diagonal blade overlay
+  const blade = document.createElement('div');
+  blade.className = 'split-blade';
+  blade.innerHTML = `<svg width="100%" height="100%" viewBox="0 0 375 320" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <line x1="213" y1="0" x2="157" y2="320" stroke="rgba(255,255,255,0.12)" stroke-width="10"/>
+    <line x1="213" y1="0" x2="157" y2="320" stroke="rgba(255,255,255,0.40)" stroke-width="1.5"/>
+  </svg>`;
+  stage.appendChild(blade);
+}
+
+/* ── rank list ──────────────────────────── */
+function renderRankGrid() {
+  const q     = QUESTIONS[currentQ];
+  const stage = document.getElementById('cards-stage');
+
+  q.cards.forEach((c, i) => {
+    const row = document.createElement('div');
+    row.className   = 'rank-row';
+    row.dataset.idx = i;
+    row.innerHTML = `
+      <div class="rank-row-badge" id="rbadge-${i}"></div>
+      <div class="rank-row-label">${c.label.replace(/\n/g,'<br>')}</div>
+    `;
+    stage.appendChild(row);
+  });
+}
+
+function updateRankDisplay() {
+  const q = QUESTIONS[currentQ];
+  q.cards.forEach((_, i) => {
+    const row   = document.querySelector(`.rank-row[data-idx="${i}"]`);
+    const badge = document.getElementById(`rbadge-${i}`);
+    if (!row || !badge) return;
+    const rank = rankOrder[i];
+    row.classList.toggle('rank-done', rank !== null);
+    badge.textContent = rank !== null ? rank : '';
+  });
+}
+
+function updateRankPips() {
+  const n    = QUESTIONS[currentQ].cards.length;
+  const done = rankOrder.filter(r => r !== null).length;
+  const pips = document.getElementById('rank-pips');
+  if (!pips) return;
+  pips.innerHTML = Array.from({ length: n }, (_, i) =>
+    `<div class="rank-pip${i < done ? ' filled' : ''}">${i < done ? i+1 : ''}</div>`
+  ).join('');
+}
+
+/* ── positions for swipe deck ────────────── */
+function posFor(cardIdx) {
+  const n = QUESTIONS[currentQ].cards.length;
+  // 2-card deck: non-center card peeks from the natural side
+  if (n === 2) {
+    if (cardIdx === centerIdx) return 'center';
+    return cardIdx > centerIdx ? 'right' : 'left';
+  }
+  const rel    = ((cardIdx - centerIdx) % n + n) % n;
+  const signed = rel > n / 2 ? rel - n : rel;
+  const clamp  = Math.max(-2, Math.min(2, signed));
+  return POS_MAP[((clamp % 6) + 6) % 6];
+}
+function updatePositions() {
+  document.querySelectorAll('.card').forEach(c => {
+    c.dataset.pos = posFor(+c.dataset.idx);
+    c.classList.toggle('is-selected', +c.dataset.idx === selectedIdx);
+  });
+}
+
+/* ── dots ───────────────────────────────── */
+function renderDots() {
+  const q    = QUESTIONS[currentQ];
+  const n    = q.cards.length;
+  const dots = document.getElementById('dots');
+  if (q.type === 'rank' || q.type === 'binary' || q.type === 'split') { dots.innerHTML = ''; return; }
+  dots.innerHTML = Array.from({ length: n }, (_, i) =>
+    `<div class="dot${i === centerIdx ? ' active' : ''}"></div>`
+  ).join('');
+}
+
+/* ── bottom ─────────────────────────────── */
+function renderBottom() {
+  const q      = QUESTIONS[currentQ];
+  const hint   = document.getElementById('hint-text');
+  const btn    = document.getElementById('next-btn');
+  const lbl    = document.getElementById('next-label');
+  const isLast = currentQ === QUESTIONS.length - 1;
+
+  if (q.type === 'rank') {
+    const done  = rankOrder.filter(r => r !== null).length;
+    const total = q.cards.length;
+    const full  = done === total;
+    hint.textContent = full
+      ? '✓ Semua sudah diurutkan!'
+      : `Tap untuk pilih peringkat ${done + 1} dari ${total}`;
+    hint.classList.toggle('selected', full);
+    btn.classList.toggle('active', full);
+    lbl.textContent = full ? (isLast ? 'Lihat Hasilku' : 'Lanjut') : 'Urutkan semua dulu';
+  } else if (q.type === 'binary' || q.type === 'split') {
+    if (selectedIdx !== null) {
+      hint.textContent = '✓ ' + q.cards[selectedIdx].label.replace(/\n/g,' ');
+      hint.classList.add('selected');
+      btn.classList.add('active');
+      lbl.textContent = isLast ? 'Lihat Hasilku' : 'Lanjut';
+    } else {
+      hint.textContent = q.type === 'split' ? 'Tap sisi untuk memilih' : 'Pilih salah satu kartu';
+      hint.classList.remove('selected');
+      btn.classList.remove('active');
+      lbl.textContent = 'Pilih dulu';
+    }
+  } else {
+    if (selectedIdx !== null) {
+      hint.textContent = '✓ ' + q.cards[selectedIdx].label.replace(/\n/g,' ');
+      hint.classList.add('selected');
+      btn.classList.add('active');
+      lbl.textContent = isLast ? 'Lihat Hasilku' : 'Lanjut';
+    } else {
+      hint.textContent = 'Tap kartu untuk memilih';
+      hint.classList.remove('selected');
+      btn.classList.remove('active');
+      lbl.textContent  = 'Pilih dulu';
+    }
+  }
+}
+
+/* ═══════════════════════════════════════
+   DRAG — swipe deck only
+═══════════════════════════════════════ */
+document.addEventListener('mousedown', onStart);
+document.addEventListener('touchstart', onStart, { passive: true });
+
+function onStart(e) {
+  const qtype = QUESTIONS[currentQ].type;
+  if (qtype === 'rank' || qtype === 'binary' || qtype === 'split') return;
+  const card = e.target.closest('.card');
+  if (!card || card.dataset.pos !== 'center') return;
+  dragging  = true;
+  lastDelta = 0;
+  startX    = e.touches ? e.touches[0].clientX : e.clientX;
+  card.classList.add('dragging');
+  window.addEventListener('mousemove', onMove);
+  window.addEventListener('touchmove', onMove, { passive: false });
+  window.addEventListener('mouseup',   onEnd);
+  window.addEventListener('touchend',  onEnd);
+}
+
+function onMove(e) {
+  if (!dragging) return;
+  if (e.cancelable) e.preventDefault();
+  const x = e.touches ? e.touches[0].clientX : e.clientX;
+  lastDelta = x - startX;
+  const center = document.querySelector('.card[data-pos="center"]');
+  if (!center) return;
+  center.style.transform = `translate3d(${lastDelta}px,0,0) rotate(${lastDelta * 0.06}deg)`;
+  center.classList.toggle('hint-right', lastDelta >  40);
+  center.classList.toggle('hint-left',  lastDelta < -40);
+}
+
+function onEnd() {
+  if (!dragging) return;
+  dragging = false;
+  window.removeEventListener('mousemove', onMove);
+  window.removeEventListener('touchmove', onMove);
+  window.removeEventListener('mouseup',   onEnd);
+  window.removeEventListener('touchend',  onEnd);
+  const center = document.querySelector('.card[data-pos="center"]');
+  if (center) { center.classList.remove('dragging','hint-right','hint-left'); center.style.transform = ''; }
+
+  const n = QUESTIONS[currentQ].cards.length;
+  if      (lastDelta < -55 && centerIdx < n-1) centerIdx++;
+  else if (lastDelta >  55 && centerIdx >   0) centerIdx--;
+
+  updatePositions(); renderDots(); renderBottom();
+}
+
+/* ═══════════════════════════════════════
+   TAP handlers
+═══════════════════════════════════════ */
+document.addEventListener('click', e => {
+  if (Math.abs(lastDelta) > 12) { lastDelta = 0; return; }
+
+  /* ── split tap ── */
+  if (QUESTIONS[currentQ].type === 'split') {
+    const half = e.target.closest('.split-half');
+    if (!half) return;
+    const i     = +half.dataset.idx;
+    const stage = document.getElementById('cards-stage');
+    if (selectedIdx === i) {
+      selectedIdx = null;
+      stage.classList.remove('sel-a', 'sel-b');
+    } else {
+      selectedIdx = i;
+      stage.classList.remove('sel-a', 'sel-b');
+      stage.classList.add(i === 0 ? 'sel-a' : 'sel-b');
+    }
+    renderBottom();
+    return;
+  }
+
+  /* ── rank tap ── */
+  if (QUESTIONS[currentQ].type === 'rank') {
+    const row = e.target.closest('.rank-row');
+    if (!row) return;
+    const i = +row.dataset.idx;
+    const existing = rankOrder[i];
+    if (existing !== null) {
+      // un-rank: remove and shift others down
+      rankOrder[i] = null;
+      for (let j = 0; j < rankOrder.length; j++) {
+        if (rankOrder[j] !== null && rankOrder[j] > existing) rankOrder[j]--;
+      }
+    } else {
+      // assign next rank
+      rankOrder[i] = rankOrder.filter(r => r !== null).length + 1;
+    }
+    updateRankDisplay();
+    renderBottom();
+    return;
+  }
+
+  const card = e.target.closest('.card');
+  if (!card) return;
+
+  const i = +card.dataset.idx;
+
+  /* ── binary tap ── */
+  if (QUESTIONS[currentQ].type === 'binary') {
+    const i = +card.dataset.idx;
+    selectedIdx = (selectedIdx === i) ? null : i;
+    document.querySelectorAll('.binary-mode .card').forEach((c, ci) => {
+      c.classList.remove('b-selected', 'b-unselected');
+      if (selectedIdx !== null) {
+        c.classList.add(ci === selectedIdx ? 'b-selected' : 'b-unselected');
+      }
+    });
+    renderBottom();
+    return;
+  }
+
+  /* ── swipe tap ── */
+  const pos = card.dataset.pos;
+  if (pos === 'left' || pos === 'right') {
+    centerIdx = i; updatePositions(); renderDots(); renderBottom();
+  } else if (pos === 'center') {
+    selectedIdx = (selectedIdx === i) ? null : i;
+    updatePositions(); renderBottom();
+  }
+  lastDelta = 0;
+});
+
+/* ═══════════════════════════════════════
+   NEXT
+═══════════════════════════════════════ */
+document.getElementById('next-btn').addEventListener('click', () => {
+  const q      = QUESTIONS[currentQ];
+  const isRank = q.type === 'rank';
+  const ready  = isRank
+    ? rankOrder.filter(r => r !== null).length === q.cards.length
+    : selectedIdx !== null;
+  if (!ready) return;
+
+  answers.push({
+    question: currentQ,
+    type:     q.type,
+    answer:   isRank ? [...rankOrder] : selectedIdx,
+  });
+
+  if (currentQ < QUESTIONS.length - 1) {
+    currentQ++;
+    centerIdx   = 0;
+    selectedIdx = null;
+    rankOrder   = [];
+    const qEl   = document.getElementById('q-text');
+    qEl.style.opacity = '0';
+    render();
+    requestAnimationFrame(() => { qEl.style.opacity = '1'; });
+  } else {
+    localStorage.setItem('conflictAnswers', JSON.stringify(answers));
+    localStorage.setItem('selectedProfile', 'The Time Bomb');
+    window.location.href = 'report.html';
+  }
+});
+
+/* ── scene switcher ─────────────────────── */
+function updateScene(q) {
+  document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
+  const sceneId = QUESTIONS[q].scene;
+  if (sceneId) {
+    const el = document.getElementById(sceneId);
+    if (el) el.classList.add('active');
+  }
+}
+
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Profile Tester</title>
+<style>
+body { font-family: Arial; padding: 20px; }
+button { padding: 10px; margin: 5px; cursor: pointer; }
+.active { background: #4CAF50; color: white; }
+</style>
+</head>
+<body>
+<h1>Test Profile Loading</h1>
+<div id="buttons"></div>
+<iframe id="preview" src="report.html" width="430" height="800" style="border: 1px solid #ccc;"></iframe>
+
+<script>
+const profiles = ["The Time Bomb", "The Peace Keeper", "The Easygoing Partner", "The Balanced Partner", "The Hidden Fighter", "The Alpha Communicator"];
+
+const buttonsDiv = document.getElementById('buttons');
+profiles.forEach(profile => {
+  const btn = document.createElement('button');
+  btn.textContent = profile;
+  btn.onclick = () => {
+    const url = `report.html?profile=${encodeURIComponent(profile)}`;
+    document.getElementById('preview').src = url;
+    document.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  };
+  buttonsDiv.appendChild(btn);
+});
+
+// Activate first button
+document.querySelector('button').classList.add('active');
+</script>
+</body>
+</html>

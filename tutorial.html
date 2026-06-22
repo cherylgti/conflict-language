@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tutorial – bakat.id</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --rose: #C8405A;
+  --rose-light: #F2A0B0;
+  --rose-pale: #FDF0F2;
+  --rose-deep: #7D1A2E;
+  --cream: #FBF6F0;
+  --warm-white: #FEFCFA;
+  --blush: #F7D6DC;
+  --ink: #1C1016;
+  --ink-mid: #4A2D35;
+  --ink-muted: #8C6870;
+  --gold: #C4923A;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  background: var(--warm-white);
+  color: var(--ink);
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.bg {
+  position: fixed; inset: 0; z-index: 0;
+  background: radial-gradient(ellipse at 50% 20%, rgba(200,64,90,0.06) 0%, transparent 65%);
+  pointer-events: none;
+}
+
+.app {
+  position: relative; z-index: 1;
+  display: flex; flex-direction: column;
+  height: 100dvh; max-width: 430px; margin: 0 auto; width: 100%;
+}
+
+/* ── HEADER ──────────────────────────────── */
+.header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px;
+  flex-shrink: 0;
+  border-bottom: 1px solid rgba(200,64,90,0.12);
+}
+.logo { font-size: 16px; font-weight: 700; letter-spacing: 0.02em; color: var(--ink); }
+.skip-btn {
+  font-size: 13px; font-weight: 500;
+  color: var(--ink-muted);
+  background: none; border: none; cursor: pointer;
+  padding: 6px 0;
+  transition: color 0.2s;
+}
+.skip-btn:hover { color: var(--rose); }
+.skip-btn:active { color: var(--rose-deep); }
+
+/* ── CONTENT ─────────────────────────────── */
+.content-wrap {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ── STEP PANELS ────────────────────────── */
+.step {
+  position: absolute;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 24px 30px;
+  opacity: 0;
+  transition: opacity 0.38s ease;
+}
+.step.show    { display: flex; }
+.step.visible { opacity: 1; }
+
+/* ── DEMO AREA ───────────────────────────── */
+.demo-area {
+  flex: 1;
+  width: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  perspective: 900px;
+}
+
+/* ── LABELS ──────────────────────────────── */
+.step-label {
+  font-size: 13px; font-weight: 500;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--rose); margin-bottom: 6px;
+  text-align: center;
+}
+.step-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(18px, 5.2vw, 22px); font-weight: 700;
+  letter-spacing: -0.01em; line-height: 1.2;
+  color: var(--ink);
+  text-align: center;
+}
+.step-sub {
+  font-size: 13px; font-weight: 400;
+  color: var(--ink-muted);
+  margin-top: 6px; line-height: 1.65;
+  text-align: center;
+}
+
+/* ── BOTTOM ──────────────────────────────── */
+.bottom-section {
+  width: 100%;
+  display: flex; flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding-top: 18px;
+  flex-shrink: 0;
+}
+.progress-dots { display: flex; gap: 7px; }
+.dot {
+  height: 7px; width: 7px;
+  border-radius: 4px;
+  background: rgba(200,64,90,0.18);
+  transition: width 0.3s ease, background 0.3s ease;
+}
+.dot.on { width: 22px; background: linear-gradient(90deg, var(--rose-light), var(--rose)); }
+.nav-row { display: flex; gap: 10px; width: 100%; align-items: center; }
+
+/* ── NEXT BUTTON ── */
+.next-btn {
+  display: flex; align-items: center;
+  background: var(--rose);
+  border: none; border-radius: 100px; padding: 6px;
+  box-shadow: 0 4px 20px rgba(200,64,90,0.30);
+  cursor: pointer;
+  font-family: 'DM Sans', system-ui, sans-serif; font-weight: 500; font-size: 15px;
+  flex: 1;
+  transition: transform 0.18s, background 0.18s, box-shadow 0.18s;
+}
+.next-btn:hover { background: var(--rose-deep); transform: translateY(-2px); box-shadow: 0 8px 28px rgba(200,64,90,0.38); }
+.next-btn:active { transform: scale(0.97); }
+.next-label {
+  color: #fff; flex: 1;
+  text-align: center; margin: 0 4px 0 18px;
+  font-size: 14px; font-weight: 500;
+}
+.next-icon {
+  background: rgba(255,255,255,0.18);
+  border-radius: 100px; padding: 12px 22px;
+  color: #fff; font-size: 18px; line-height: 1;
+  flex-shrink: 0;
+}
+
+/* ── BACK BUTTON ── */
+.back-btn {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: rgba(200,64,90,0.06);
+  border: 1px solid rgba(200,64,90,0.15);
+  color: var(--ink-mid); font-size: 20px; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0;
+  transition: background 0.18s, transform 0.15s;
+}
+.back-btn:active { transform: scale(0.91); background: rgba(200,64,90,0.12); }
+
+/* ═══════════════════════════════════════════
+   REAL CARD COMPONENT (exact from swipe-preview)
+═══════════════════════════════════════════ */
+.card {
+  position: absolute;
+  width: 172px; height: 232px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #f7ede0 0%, #ede2d0 100%);
+  padding: 7px;
+  box-shadow:
+    rgba(200,64,90,0.12) 0 6px 20px,
+    rgba(255,248,245,0.6) 2px  2px 2px inset,
+    rgba(0,0,0,0.06)    -1px -1px 2px inset,
+    rgba(200,64,90,0.08) 0 18px 44px;
+}
+.card-inner { width:100%; height:100%; border-radius:9px; overflow:hidden; position:relative; }
+.ci-bg { position:absolute; inset:0; }
+.ci-gl { position:absolute; bottom:0; left:-40%; width:180%; height:65%; background:radial-gradient(50% 50%,#ff5b00 20%,rgba(255,91,0,0)); opacity:0.85; pointer-events:none; }
+.ci-gr { position:absolute; bottom:0; right:-40%; width:130%; height:55%; background:radial-gradient(50% 50%,#422fb7,rgba(66,47,183,0)); opacity:0.85; pointer-events:none; }
+.ci-gc { position:absolute; bottom:-5%; left:10%; width:80%; height:40%; background:radial-gradient(50% 50%,#ffba01,rgba(255,186,1,0)); opacity:0.85; pointer-events:none; }
+.ci-emoji {
+  position:absolute; top:50%; left:50%;
+  transform:translate(-50%,-62%);
+  font-size:46px; line-height:1;
+  filter:drop-shadow(0 3px 10px rgba(0,0,0,0.30));
+  pointer-events:none; user-select:none;
+}
+.ci-label {
+  position:absolute; bottom:0; left:0; right:0;
+  padding:28px 10px 10px;
+  background:linear-gradient(transparent,rgba(0,0,0,0.65));
+  font-size:11px; font-weight:600; color:#fff;
+  text-align:center; line-height:1.3;
+  text-shadow:0 1px 3px rgba(0,0,0,0.6);
+}
+.card-check {
+  position:absolute; top:10px; right:10px;
+  width:26px; height:26px; border-radius:50%;
+  background: var(--rose);
+  display:flex; align-items:center; justify-content:center;
+  font-size:12px; font-weight:700; color:#fff;
+  box-shadow:0 2px 8px rgba(200,64,90,0.40);
+  z-index:20; pointer-events:none;
+  opacity:0; transform:scale(0.5);
+  transition: opacity 0.22s, transform 0.22s cubic-bezier(0.34,1.4,0.64,1);
+}
+
+/* ═══════════════════════════════════════════
+   REAL RANK ROW COMPONENT (exact from swipe-preview)
+═══════════════════════════════════════════ */
+.rank-row {
+  display:flex; align-items:center;
+  gap:12px; padding:11px 16px;
+  border-radius:16px;
+  background:rgba(200,64,90,0.04);
+  border:1.5px solid rgba(200,64,90,0.12);
+  cursor:pointer; user-select:none;
+  transition: border-color 0.25s, box-shadow 0.25s;
+}
+.rank-row.rank-done {
+  border-color:rgba(200,64,90,0.45);
+  box-shadow:0 0 20px rgba(200,64,90,0.12);
+}
+.rank-row-badge {
+  width:36px; height:36px; border-radius:50%; flex-shrink:0;
+  background:rgba(200,64,90,0.06);
+  border:1.5px solid rgba(200,64,90,0.18);
+  display:flex; align-items:center; justify-content:center;
+  font-size:14px; font-weight:700; color:var(--ink-mid);
+  transition: background 0.25s, border-color 0.25s,
+              transform 0.35s cubic-bezier(0.34,1.6,0.64,1);
+}
+.rank-row-badge:empty::after {
+  content:''; display:block;
+  width:6px; height:6px; border-radius:50%;
+  background:rgba(200,64,90,0.25);
+}
+.rank-row.rank-done .rank-row-badge {
+  background: var(--rose);
+  border-color:transparent; color:#fff; transform:scale(1.08);
+}
+.rank-row-emoji { font-size:20px; flex-shrink:0; line-height:1; }
+.rank-row-label { font-size:14px; font-weight:400; line-height:1.3; color:var(--ink-mid); }
+
+/* ═══════════════════════════════════════════
+   STEP 1 — SWIPE SCENE
+═══════════════════════════════════════════ */
+.swipe-scene {
+  position: relative;
+  width: 172px; height: 232px;
+  margin-bottom: 40px;
+}
+
+/* card1 = front, swipes left; card2 = behind it, rises up */
+.swipe-scene .card.c1 {
+  z-index: 3;
+  animation: swipeCycle 3.4s cubic-bezier(0.4,0,0.6,1) infinite;
+}
+.swipe-scene .card.c2 {
+  z-index: 2;
+  transform: translateY(10px) scale(0.95);
+  animation: riseCycle 3.4s ease-in-out infinite;
+}
+.swipe-scene .card.c3 {
+  z-index: 1;
+  transform: translateY(20px) scale(0.90);
+  opacity: 0.50;
+}
+
+@keyframes swipeCycle {
+  0%    { transform: translateX(0)     rotate(0deg);   opacity: 1; }
+  32%   { transform: translateX(-300px) rotate(-14deg); opacity: 0; }
+  33%   { transform: translateX(0)     rotate(0deg);   opacity: 0; }
+  48%   { transform: translateX(0)     rotate(0deg);   opacity: 1; }
+  100%  { transform: translateX(0)     rotate(0deg);   opacity: 1; }
+}
+@keyframes riseCycle {
+  0%   { transform: translateY(10px) scale(0.95); }
+  32%  { transform: translateY(0px)  scale(1.00); }
+  100% { transform: translateY(10px) scale(0.95); }
+}
+
+/* hand hint below the stack */
+.hand-hint {
+  position: absolute;
+  bottom: -38px; left: 50%;
+  transform: translateX(-50%);
+  font-size: 28px;
+  animation: handCycle 3.4s ease-in-out infinite;
+}
+@keyframes handCycle {
+  0%   { transform: translateX(calc(-50% + 0px));  opacity: 0.85; }
+  32%  { transform: translateX(calc(-50% - 60px)); opacity: 0; }
+  33%  { transform: translateX(calc(-50% + 0px));  opacity: 0; }
+  50%  { transform: translateX(calc(-50% + 0px));  opacity: 0.85; }
+  100% { transform: translateX(calc(-50% + 0px));  opacity: 0.85; }
+}
+
+/* ═══════════════════════════════════════════
+   STEP 3 — RANK SCENE
+═══════════════════════════════════════════ */
+.rank-scene {
+  width: 100%; max-width: 300px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+
+/* staggered badge pop animation */
+.rank-scene .rank-row:nth-child(1) { animation: rowReveal 3.6s ease-in-out 0s   infinite; }
+.rank-scene .rank-row:nth-child(2) { animation: rowReveal 3.6s ease-in-out 0.5s infinite; }
+.rank-scene .rank-row:nth-child(3) { animation: rowReveal 3.6s ease-in-out 1.0s infinite; }
+
+.rank-scene .rank-row:nth-child(1) .rank-row-badge { animation: badgePop 3.6s ease-in-out 0s   infinite; }
+.rank-scene .rank-row:nth-child(2) .rank-row-badge { animation: badgePop 3.6s ease-in-out 0.5s infinite; }
+.rank-scene .rank-row:nth-child(3) .rank-row-badge { animation: badgePop 3.6s ease-in-out 1.0s infinite; }
+
+@keyframes rowReveal {
+  0%, 15%  { border-color: rgba(200,64,90,0.12); box-shadow: none; }
+  30%, 80% { border-color: rgba(200,64,90,0.45); box-shadow: 0 0 20px rgba(200,64,90,0.12); }
+  100%     { border-color: rgba(200,64,90,0.12); box-shadow: none; }
+}
+@keyframes badgePop {
+  0%, 15%  { background: rgba(200,64,90,0.06); border-color: rgba(200,64,90,0.18); transform: scale(1); }
+  25%      { background: var(--rose); border-color: transparent; transform: scale(1.18); }
+  35%, 80% { background: var(--rose); border-color: transparent; transform: scale(1.08); }
+  100%     { background: rgba(200,64,90,0.06); border-color: rgba(200,64,90,0.18); transform: scale(1); }
+}
+
+/* ═══════════════════════════════════════════
+   STEP 4 — FINAL
+═══════════════════════════════════════════ */
+.final-scene {
+  display: flex; flex-direction: column;
+  align-items: center; gap: 18px;
+  text-align: center;
+}
+#sc-final {
+  display: block;
+  width: 190px; height: 190px;
+  border-radius: 50%;
+}
+.final-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 28px; font-weight: 700;
+  letter-spacing: -0.01em; color: var(--ink);
+  text-align: center;
+}
+.final-sub {
+  font-size: 14px; color: var(--ink-muted);
+  line-height: 1.65; max-width: 270px; text-align: center;
+}
+</style>
+</head>
+<body>
+<div class="bg"></div>
+<div class="app">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="logo">bakat.id</div>
+    <button class="skip-btn" id="skipBtn" onclick="skipToQuiz()">Skip →</button>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content-wrap">
+
+    <!-- ── STEP 1: SWIPE ── -->
+    <div class="step" id="step1">
+      <div class="demo-area">
+        <div style="position:relative;">
+          <div class="swipe-scene">
+            <!-- card 3: far back -->
+            <div class="card c3">
+              <div class="card-inner">
+                <div class="ci-bg" style="background:linear-gradient(145deg,#FDF0F2 0%,#F2A0B0 55%,#C8405A 100%);"></div>
+                <div class="ci-gl"></div><div class="ci-gr"></div><div class="ci-gc"></div>
+                <div class="ci-emoji">🔥</div>
+                <div class="ci-label">Langsung konfrontasi</div>
+              </div>
+            </div>
+            <!-- card 2: middle -->
+            <div class="card c2">
+              <div class="card-inner">
+                <div class="ci-bg" style="background:linear-gradient(145deg,#F5EDE8 0%,#D4A8A0 55%,#8C6870 100%);"></div>
+                <div class="ci-gl"></div><div class="ci-gr"></div><div class="ci-gc"></div>
+                <div class="ci-emoji">🤍</div>
+                <div class="ci-label">Rela ngalah demi pasangan</div>
+              </div>
+            </div>
+            <!-- card 1: front, swipes out -->
+            <div class="card c1">
+              <div class="card-inner">
+                <div class="ci-bg" style="background:linear-gradient(145deg,#FDF0F2 0%,#F2A0B0 55%,#C8405A 100%);"></div>
+                <div class="ci-gl"></div><div class="ci-gr"></div><div class="ci-gc"></div>
+                <div class="ci-emoji">😶‍🌫️</div>
+                <div class="ci-label">Menghindari konflik</div>
+              </div>
+            </div>
+          </div>
+          <div class="hand-hint">👈</div>
+        </div>
+      </div>
+      <div style="text-align:center;">
+        <div class="step-label">Cara main</div>
+        <div class="step-title">Swipe kartunya</div>
+        <div class="step-sub">Geser kiri atau kanan<br>sesuai yang paling menggambarkanmu</div>
+      </div>
+      <div class="bottom-section">
+        <div class="progress-dots">
+          <div class="dot on"></div>
+          <div class="dot"></div>
+        </div>
+        <div class="nav-row">
+          <button class="next-btn" onclick="goTo(3)">
+            <span class="next-label">Next</span>
+            <div class="next-icon">→</div>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── STEP 3: RANK ── -->
+    <div class="step" id="step3">
+      <div class="demo-area">
+        <div class="rank-scene">
+          <div class="rank-row rank-done">
+            <div class="rank-row-badge">1</div>
+            <div class="rank-row-emoji">😶‍🌫️</div>
+            <div class="rank-row-label">Menghindari konflik</div>
+          </div>
+          <div class="rank-row rank-done">
+            <div class="rank-row-badge">2</div>
+            <div class="rank-row-emoji">🤍</div>
+            <div class="rank-row-label">Rela ngalah</div>
+          </div>
+          <div class="rank-row rank-done">
+            <div class="rank-row-badge">3</div>
+            <div class="rank-row-emoji">🔥</div>
+            <div class="rank-row-label">Langsung konfrontasi</div>
+          </div>
+        </div>
+      </div>
+      <div style="text-align:center;">
+        <div class="step-label">Cara main</div>
+        <div class="step-title">Urutkan pilihan</div>
+        <div class="step-sub">Tap setiap kartu secara berurutan<br>dari yang paling ke yang paling tidak menggambarkanmu</div>
+      </div>
+      <div class="bottom-section">
+        <div class="progress-dots">
+          <div class="dot"></div>
+          <div class="dot on"></div>
+        </div>
+        <div class="nav-row">
+          <button class="back-btn" onclick="goTo(1)">‹</button>
+          <button class="next-btn" onclick="startQuiz()">
+            <span class="next-label">Got it!</span>
+            <div class="next-icon">→</div>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content-wrap -->
+</div><!-- /app -->
+
+<script>
+  let current = 1;
+
+  function goTo(n) {
+    const prev = document.getElementById('step' + current);
+    prev.classList.remove('visible');
+    setTimeout(() => prev.classList.remove('show'), 360);
+
+    current = n;
+
+    const next = document.getElementById('step' + current);
+    next.classList.add('show');
+    requestAnimationFrame(() => requestAnimationFrame(() => next.classList.add('visible')));
+  }
+
+  function skipToQuiz() {
+    localStorage.setItem('tutorialCompleted', 'true');
+    window.location.href = 'swipe-preview.html';
+  }
+
+  function startQuiz() {
+    localStorage.setItem('tutorialCompleted', 'true');
+    window.location.href = 'swipe-preview.html';
+  }
+
+  // init
+  (function () {
+    const s = document.getElementById('step1');
+    s.classList.add('show');
+    requestAnimationFrame(() => requestAnimationFrame(() => s.classList.add('visible')));
+  })();
+</script>
+</body>
+</html>

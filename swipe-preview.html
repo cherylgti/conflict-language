@@ -1,0 +1,2634 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Conflict Language – bakat.id</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --rose: #C8405A;
+  --rose-light: #F2A0B0;
+  --rose-pale: #FDF0F2;
+  --rose-deep: #7D1A2E;
+  --cream: #FBF6F0;
+  --warm-white: #FEFCFA;
+  --blush: #F7D6DC;
+  --ink: #1C1016;
+  --ink-mid: #4A2D35;
+  --ink-muted: #8C6870;
+  --gold: #C4923A;
+  --gold-light: #F0D5A0;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  background: var(--warm-white); color: var(--ink);
+  height: 100dvh; overflow: hidden;
+}
+.bg {
+  position: fixed; inset: 0; z-index: 0;
+  background: radial-gradient(ellipse at 50% 20%, rgba(200,64,90,0.06) 0%, transparent 65%);
+  pointer-events: none;
+}
+.app {
+  position: relative; z-index: 1;
+  display: flex; flex-direction: column;
+  height: 100dvh; max-width: 430px; margin: 0 auto; width: 100%;
+}
+
+/* ── HEADER ─────────────────────────────── */
+.header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px 10px; flex-shrink: 0;
+}
+.logo      { font-size: 16px; font-weight: 700; letter-spacing: 0.02em; color: var(--ink); }
+.lang      { font-size: 12px; font-weight: 500; color: var(--ink-muted); cursor: pointer; }
+.q-counter { font-size: 11px; font-weight: 500; color: var(--ink-muted); letter-spacing: 0.04em; }
+
+.back-btn {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: rgba(200,64,90,0.06);
+  border: 1px solid rgba(200,64,90,0.15);
+  color: var(--ink-mid); font-size: 20px; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0;
+  transition: background 0.18s, transform 0.15s;
+  display: none; /* hidden on Q1, shown via JS */
+}
+.back-btn:active { transform: scale(0.91); background: rgba(200,64,90,0.12); }
+
+/* ── PROGRESS BAR ───────────────────────── */
+.progress-wrap { padding: 0 20px 2px; flex-shrink: 0; }
+.progress-track { height: 3px; border-radius: 3px; background: rgba(200,64,90,0.10); overflow: hidden; }
+.progress-fill {
+  height: 100%; border-radius: 3px;
+  background: linear-gradient(90deg, var(--rose-light), var(--rose));
+  transition: width 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── QUESTION ───────────────────────────── */
+.question-wrap { flex-shrink: 0; padding: 16px 24px 8px; }
+.q-eyebrow {
+  font-size: 10px; font-weight: 500;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--rose); margin-bottom: 5px;
+  transition: color 0.3s;
+}
+.q-eyebrow.rank   { color: var(--rose); }
+.q-eyebrow.binary { color: var(--rose); }
+.q-eyebrow.split  { color: var(--rose-deep); }
+.q-text {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(18px, 5.2vw, 22px);
+  font-weight: 700; letter-spacing: -0.01em; line-height: 1.2;
+  color: var(--ink); transition: opacity 0.22s ease;
+}
+
+/* ══════════════════════════════════════════
+   SWIPE — stacked deck
+══════════════════════════════════════════ */
+.cards-stage {
+  flex: 1; min-height: 0; position: relative;
+  display: flex; align-items: center; justify-content: center;
+  perspective: 1000px; user-select: none;
+}
+.card {
+  position: absolute;
+  width: 200px; height: 268px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #f7ede0 0%, #ede2d0 100%);
+  padding: 8px;
+  box-shadow:
+    rgba(200,64,90,0.12) 0 6px 20px,
+    rgba(255,248,245,0.6) 2px 2px 2px inset,
+    rgba(0,0,0,0.06) -1px -1px 2px inset,
+    rgba(200,64,90,0.08) 0 18px 44px;
+  cursor: pointer; touch-action: none;
+  transition: transform 0.38s cubic-bezier(0.25,1,0.5,1),
+              box-shadow 0.38s ease, opacity 0.38s ease;
+}
+.card[data-pos="center"] {
+  z-index: 10; opacity: 1; cursor: grab;
+  transform: translate3d(0,0,0) rotate(3deg);
+  box-shadow:
+    rgba(200,64,90,0.20) 0 0 26px 5px,
+    rgba(255,248,245,0.6) 2px 2px 2px inset,
+    rgba(0,0,0,0.06)    -1px -1px 2px inset,
+    rgba(200,64,90,0.10) 0 18px 44px;
+}
+.card[data-pos="center"]:active { cursor: grabbing; }
+.card[data-pos="center"].peek-left  { transform: translate3d( 50px,0,0) rotate(3deg); }
+.card[data-pos="center"].peek-right { transform: translate3d(-50px,0,0) rotate(3deg); }
+.card[data-pos="left"]      { z-index:5; transform:translate(-100px,12px) rotate(-18deg) scale(0.68); opacity:0.88; }
+.card[data-pos="right"]     { z-index:5; transform:translate( 100px,12px) rotate( 18deg) scale(0.68); opacity:0.88; }
+.card[data-pos="far-left"]  { z-index:2; transform:translate3d(-180px,0,-700px) rotate(-24deg); opacity:0.45; pointer-events:none; }
+.card[data-pos="far-right"] { z-index:2; transform:translate3d( 180px,0,-700px) rotate( 24deg); opacity:0.45; pointer-events:none; }
+.card[data-pos="hidden"]    { z-index:0; transform:translate3d(0,0,-900px) rotate(0deg); opacity:0; pointer-events:none; }
+
+.card.is-selected[data-pos="center"] {
+  box-shadow:
+    rgba(200,64,90,0.55) 0 0 36px 8px,
+    rgba(255,248,245,0.6) 2px 2px 2px inset,
+    rgba(0,0,0,0.04)    -1px -1px 2px inset;
+}
+.card.dragging { transition: none !important; }
+.card[data-pos="center"].hint-right { box-shadow: rgba(196,146,58,0.55) 0 0 32px 8px, rgba(255,248,245,0.6) 2px 2px 2px inset; }
+.card[data-pos="center"].hint-left  { box-shadow: rgba(125,26,46,0.55) 0 0 32px 8px, rgba(255,248,245,0.6) 2px 2px 2px inset; }
+
+/* swipe checkmark badge */
+.card-check {
+  position: absolute; top: 10px; right: 10px;
+  width: 26px; height: 26px; border-radius: 50%;
+  background: var(--rose);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; color: #fff;
+  box-shadow: 0 2px 8px rgba(200,64,90,0.40);
+  opacity: 0; transform: scale(0.5);
+  transition: opacity 0.22s, transform 0.22s cubic-bezier(0.34,1.4,0.64,1);
+  z-index: 20; pointer-events: none;
+}
+.card.is-selected[data-pos="center"] .card-check { opacity:1; transform:scale(1); }
+
+/* ══════════════════════════════════════════
+   RANK — vertical tap-to-rank list
+══════════════════════════════════════════ */
+.cards-stage.rank-mode {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 18px 4px;
+  perspective: none;
+  align-items: stretch;
+  justify-content: flex-start;
+  overflow-y: auto;
+}
+.rank-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 16px;
+  border-radius: 16px;
+  background: rgba(200,64,90,0.04);
+  border: 1.5px solid rgba(200,64,90,0.12);
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.18s ease;
+}
+.rank-row:active { transform: scale(0.97); }
+.rank-row.rank-done {
+  border-color: rgba(200,64,90,0.45);
+  box-shadow: 0 0 20px rgba(200,64,90,0.12);
+}
+.rank-row-badge {
+  width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+  background: rgba(200,64,90,0.06);
+  border: 1.5px solid rgba(200,64,90,0.18);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700; color: var(--ink-mid);
+  transition: background 0.25s, border-color 0.25s,
+              transform 0.35s cubic-bezier(0.34,1.6,0.64,1);
+}
+.rank-row-badge:empty::after {
+  content: '';
+  display: block;
+  width: 6px; height: 6px; border-radius: 50%;
+  background: rgba(200,64,90,0.25);
+}
+.rank-row.rank-done .rank-row-badge {
+  background: var(--rose);
+  border-color: transparent;
+  color: #fff;
+  transform: scale(1.08);
+}
+.rank-row-label {
+  font-size: 14px; font-weight: 400; line-height: 1.3;
+  color: var(--ink-mid);
+}
+
+/* rank-strip kept in DOM but never shown */
+.rank-strip { display: none !important; }
+
+/* ══════════════════════════════════════════
+   BINARY — 2-card this-or-that layout
+══════════════════════════════════════════ */
+.cards-stage.binary-mode {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  padding: 12px 16px 10px;
+  gap: 0;
+  perspective: none;
+}
+.binary-mode .card {
+  position: relative;
+  flex: 1;
+  height: 100%;
+  min-height: 210px;
+  transform: scale(1) translateY(0px) !important;
+  opacity: 1 !important;
+  cursor: pointer;
+  transition:
+    transform 0.38s cubic-bezier(0.25,1,0.5,1),
+    box-shadow 0.38s ease,
+    opacity    0.38s ease;
+  touch-action: auto;
+}
+.binary-mode .card.b-selected {
+  transform: scale(1.05) translateY(-8px) !important;
+  box-shadow:
+    rgba(200,64,90,0.55) 0 0 36px 10px,
+    rgba(255,248,245,0.6) 2px 2px 2px inset,
+    rgba(0,0,0,0.04)    -1px -1px 2px inset !important;
+}
+.binary-mode .card.b-unselected {
+  transform: scale(0.91) translateY(8px) !important;
+  opacity: 0.40 !important;
+}
+.binary-mode .card.b-selected .card-check { opacity:1; transform:scale(1); }
+
+/* VS divider between the two binary cards */
+.vs-divider {
+  width: 52px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 15;
+  pointer-events: none;
+}
+.vs-divider::before,
+.vs-divider::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1px;
+  background: linear-gradient(to bottom, transparent, rgba(200,64,90,0.25), transparent);
+}
+.vs-divider::before { top: 0;              bottom: calc(50% + 22px); }
+.vs-divider::after  { top: calc(50% + 22px); bottom: 0; }
+.vs-label {
+  width: 38px; height: 38px; border-radius: 50%;
+  background: rgba(200,64,90,0.06);
+  border: 1.5px solid rgba(200,64,90,0.20);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 500; letter-spacing: 0.07em;
+  color: var(--ink-muted);
+}
+
+/* ══════════════════════════════════════════
+   SPLIT — diagonal screen divide
+══════════════════════════════════════════ */
+.cards-stage.split-mode {
+  flex: 1; min-height: 0;
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+  margin: 10px 16px 6px;
+  perspective: none;
+  display: block;
+}
+.split-half {
+  position: absolute; inset: 0;
+  cursor: pointer;
+  transition: clip-path 0.48s cubic-bezier(0.4,0,0.2,1),
+              filter     0.38s ease;
+  will-change: clip-path;
+}
+/* neutral 50/50 diagonal: blade runs top-57% → bottom-42% */
+.split-half-a { clip-path: polygon(0 0, 57% 0, 42% 100%, 0 100%); }
+.split-half-b { clip-path: polygon(57% 0, 100% 0, 100% 100%, 42% 100%); }
+
+/* A selected → blade shifts right */
+.split-mode.sel-a .split-half-a { clip-path: polygon(0 0, 71% 0, 56% 100%, 0 100%); }
+.split-mode.sel-a .split-half-b { clip-path: polygon(71% 0, 100% 0, 100% 100%, 56% 100%); filter: brightness(0.45); }
+/* B selected → blade shifts left */
+.split-mode.sel-b .split-half-a { clip-path: polygon(0 0, 43% 0, 28% 100%, 0 100%); filter: brightness(0.45); }
+.split-mode.sel-b .split-half-b { clip-path: polygon(43% 0, 100% 0, 100% 100%, 28% 100%); }
+
+.split-bg { position: absolute; inset: 0; }
+
+.split-label {
+  position: absolute; bottom: 22%;
+  font-size: 13px; font-weight: 700; color: #fff;
+  line-height: 1.35; text-align: center;
+  text-shadow: 0 1px 5px rgba(0,0,0,0.7);
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+.split-half-a .split-label { left: 5%; width: 40%; }
+.split-half-b .split-label { right: 5%; width: 40%; }
+
+.split-check {
+  position: absolute; top: 14px;
+  width: 30px; height: 30px; border-radius: 50%;
+  background: var(--rose);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: #fff;
+  box-shadow: 0 2px 8px rgba(200,64,90,0.40);
+  opacity: 0; transform: scale(0.3) rotate(-30deg);
+  transition: opacity 0.25s, transform 0.4s cubic-bezier(0.34,1.6,0.64,1);
+  pointer-events: none; z-index: 10;
+}
+.split-half-a .split-check { left: 12px; }
+.split-half-b .split-check { right: 12px; }
+.split-mode.sel-a .split-half-a .split-check,
+.split-mode.sel-b .split-half-b .split-check { opacity: 1; transform: scale(1) rotate(0deg); }
+
+.split-blade {
+  position: absolute; inset: 0;
+  pointer-events: none; z-index: 8;
+  transition: opacity 0.3s;
+}
+
+/* ── SHARED CARD INNER ───────────────────── */
+.card-inner { width:100%; height:100%; border-radius:9px; overflow:hidden; position:relative; }
+.ci-bg { position:absolute; inset:0; }
+.ci-gl { position:absolute; bottom:0; left:-40%; width:180%; height:65%; background:radial-gradient(50% 50%,#ff5b00 20%,rgba(255,91,0,0)); opacity:0.85; pointer-events:none; }
+.ci-gr { position:absolute; bottom:0; right:-40%; width:130%; height:55%; background:radial-gradient(50% 50%,#422fb7,rgba(66,47,183,0)); opacity:0.85; pointer-events:none; }
+.ci-gc { position:absolute; bottom:-5%; left:10%; width:80%; height:40%; background:radial-gradient(50% 50%,#ffba01,rgba(255,186,1,0)); opacity:0.85; pointer-events:none; }
+.ci-emoji {
+  position:absolute; top:50%; left:50%;
+  transform:translate(-50%,-62%);
+  font-size:54px; line-height:1;
+  filter:drop-shadow(0 3px 10px rgba(0,0,0,0.45));
+  pointer-events:none; user-select:none;
+}
+.ci-label {
+  position:absolute; bottom:0; left:0; right:0;
+  padding:32px 10px 12px;
+  background:linear-gradient(transparent,rgba(0,0,0,0.72));
+  font-size:12px; font-weight:700; color:#fff;
+  text-align:center; line-height:1.3;
+  text-shadow:0 1px 3px rgba(0,0,0,0.7);
+}
+.rank-row-emoji { font-size:20px; flex-shrink:0; line-height:1; }
+
+/* ── SWIPE HINT (hidden on rank) ─────────── */
+.swipe-hint {
+  flex-shrink: 0; text-align: center; padding: 0 0 4px;
+  font-size: 11px; font-weight: 400; color: var(--ink-muted); letter-spacing: 0.04em;
+  transition: opacity 0.2s;
+}
+.swipe-hint.hidden { display: none; }
+
+/* ── BOTTOM ─────────────────────────────── */
+.bottom {
+  flex-shrink: 0;
+  padding: 8px 22px calc(24px + env(safe-area-inset-bottom));
+  display: flex; flex-direction: column; align-items: center; gap: 9px;
+}
+.dots { display:flex; gap:7px; align-items:center; height:10px; }
+.dot  { width:6px; height:6px; border-radius:50%; background:rgba(200,64,90,0.18); transition:background 0.22s,transform 0.22s; }
+.dot.active { background:var(--rose); transform:scale(1.25); }
+
+.hint-text {
+  font-size: 12.5px; font-weight: 400;
+  color: var(--ink-muted); opacity: 0.7; text-align: center; min-height: 20px;
+  transition: opacity 0.2s;
+}
+.hint-text.selected { opacity: 1; color: var(--ink-mid); }
+
+/* ══════════════════════════════════════════
+   3D SCENE LAYER
+══════════════════════════════════════════ */
+.scene-layer {
+  position: fixed; top: 0; bottom: 0;
+  left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 430px;
+  z-index: 0; pointer-events: none; overflow: hidden;
+}
+.scene {
+  position: absolute; inset: 0;
+  opacity: 0; transition: opacity 1.0s ease;
+  pointer-events: none;
+}
+.scene.active { opacity: 1; }
+.fobj { position: absolute; }
+
+/* ── 3D model ornament ─────────────────── */
+.scene-3d {
+  position: absolute;
+  pointer-events: none;
+}
+
+/* ── float / rotation keyframes ─── */
+@keyframes floatA {
+  0%,100% { transform: translateY(0px) rotate(0deg); }
+  50%      { transform: translateY(-20px) rotate(6deg); }
+}
+@keyframes floatB {
+  0%,100% { transform: translateY(0px) rotate(0deg); }
+  50%      { transform: translateY(-14px) rotate(-5deg); }
+}
+@keyframes floatC {
+  0%,100% { transform: translateY(-7px) rotate(3deg); }
+  50%      { transform: translateY(12px) rotate(-3deg); }
+}
+@keyframes floatD {
+  0%,100% { transform: translateY(0px) rotate(0deg) scale(1); }
+  50%      { transform: translateY(-10px) rotate(2deg) scale(1.04); }
+}
+@keyframes rotateCW  { from { transform: rotate(0deg);    } to { transform: rotate(360deg);  } }
+@keyframes rotateCCW { from { transform: rotate(0deg);    } to { transform: rotate(-360deg); } }
+@keyframes orbitIn   { 0%,100% { transform: translateX(0px); } 50% { transform: translateX(22px); } }
+@keyframes orbitOut  { 0%,100% { transform: translateX(0px); } 50% { transform: translateX(-22px); } }
+@keyframes shimmer   { 0%,100% { opacity: 0.55; } 50% { opacity: 1; } }
+
+.next-btn {
+  display:flex; align-items:center;
+  background:var(--rose);
+  border:none; border-radius:100px; padding:6px;
+  box-shadow:0 4px 20px rgba(200,64,90,0.30);
+  cursor:pointer; font-family:'DM Sans',system-ui,sans-serif; font-weight:500; font-size:15px;
+  width:100%; opacity:0.35; pointer-events:none;
+  transition:opacity 0.28s,transform 0.18s,background 0.18s,box-shadow 0.18s;
+}
+.next-btn.active { opacity:1; pointer-events:all; }
+.next-btn.active:hover { background:var(--rose-deep); transform:translateY(-2px); box-shadow:0 8px 28px rgba(200,64,90,0.38); }
+.next-btn.active:active { transform:scale(0.97); }
+.next-btn.rank-only { display:flex; }
+.next-label { color:#fff; flex:1; text-align:center; margin:0 4px 0 18px; font-weight:500; }
+.next-icon {
+  background:rgba(255,255,255,0.18);
+  border-radius:100px; padding:12px 22px;
+  color:#fff; font-size:18px; line-height:1;
+}
+
+/* ── QUESTION TRANSITIONS ───────────────── */
+@keyframes qExit {
+  0%   { opacity:1; transform:translateY(0) scale(1); }
+  100% { opacity:0; transform:translateY(-60px) scale(0.93); }
+}
+@keyframes qEnter {
+  0%   { opacity:0; transform:translateY(56px) scale(0.95); }
+  65%  { opacity:1; transform:translateY(-5px) scale(1.005); }
+  100% { opacity:1; transform:translateY(0) scale(1); }
+}
+.q-exit  { animation: qExit  0.42s cubic-bezier(0.4,0,0.6,1) both; }
+.q-enter { animation: qEnter 0.68s cubic-bezier(0.22,1,0.36,1) both; }
+
+/* ── CARD PICK GLOW ─────────────────────── */
+@keyframes cardPickGlow {
+  0%   { transform:translate3d(0,0,0) scale(1); }
+  45%  { transform:translate3d(0,-10px,0) scale(1.08);
+         box-shadow:rgba(255,255,255,0.9) 0 0 55px 22px,rgba(0,0,0,0.2) 0 28px 56px; }
+  100% { transform:translate3d(0,-28px,0) scale(0.9); opacity:0; }
+}
+.card-pick { animation:cardPickGlow 0.28s cubic-bezier(0.4,0,1,1) forwards !important; z-index:20; }
+
+</style>
+</head>
+<body>
+<div class="bg"></div>
+
+
+<!-- ╔═══════════════════════════════════════╗
+     ║  3D CONTEXTUAL SCENE OBJECTS          ║
+     ╚═══════════════════════════════════════╝ -->
+<div class="scene-layer" id="scene-layer">
+
+  <!-- ── Q0: CONFLICT — crystal shards ─── -->
+  <div class="scene" id="sc0"></div>
+
+  <!-- ── Q2: fire only (fires + ambient glow injected by JS) ─── -->
+  <div class="scene" id="sc1"></div>
+
+  <div class="scene" id="sc2"></div>
+
+  <div class="scene" id="sc3"></div>
+
+  <div class="scene" id="sc4"></div>
+  <div class="scene" id="sc5"></div>
+  <div class="scene" id="sc6"></div>
+  <div class="scene" id="sc-binary"></div>
+  <div class="scene" id="sc-19"></div>
+
+  <!-- ── Q9: Awkward (unique scene) ─── -->
+  <div class="scene" id="sc-q9"></div>
+
+  <!-- ── Q10: Alert/Danger (unique scene) ─── -->
+  <div class="scene" id="sc-q10"></div>
+
+</div>
+
+<div class="app">
+
+  <div class="header">
+    <button class="back-btn" id="back-btn" onclick="goBack()">‹</button>
+    <div class="logo" id="header-logo">bakat.id</div>
+    <div class="lang">ID ▾</div>
+    <span class="q-counter" id="q-counter">1 / 5</span>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-track">
+      <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+    </div>
+  </div>
+
+  <div class="question-wrap">
+    <div class="q-eyebrow" id="q-eyebrow">Pertanyaan</div>
+    <div class="q-text" id="q-text"></div>
+  </div>
+
+  <!-- rank progress pips (only visible on rank question) -->
+  <div class="rank-strip" id="rank-strip">
+    <span>Prioritas kamu</span>
+    <div class="rank-strip-pips" id="rank-pips"></div>
+  </div>
+
+  <div class="cards-stage" id="cards-stage"></div>
+
+  <div class="swipe-hint" id="swipe-hint">← geser untuk melihat pilihan lain →</div>
+
+  <div class="bottom">
+    <div class="dots" id="dots"></div>
+    <div class="hint-text" id="hint-text">Tap kartu untuk memilih</div>
+    <button class="next-btn" id="next-btn">
+      <span class="next-label" id="next-label">Pilih dulu</span>
+      <div class="next-icon">→</div>
+    </button>
+  </div>
+
+</div>
+
+<!-- Three.js loaded before inline script so initAllScenes() finds THREE defined -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script>
+// ── Tutorial check: redirect if first time ──
+if (localStorage.getItem('tutorialCompleted') !== 'true') {
+  window.location.replace('tutorial.html');
+}
+
+const QUESTIONS = [
+  // ── Q1 ──────────────────────────────────
+  {
+    type: 'swipe', scene: 'sc0',
+    bg: 'linear-gradient(135deg,#FDF0F2 0%,#F7D6DC 45%,#F2A0B0 100%)',
+    text: "Kalau lagi ada masalah\nsama pasangan,\nkamu lebih sering…",
+    cards: [
+      { emoji: "😶‍🌫️", label: "Biasanya menghindari\nhal yang bikin\nnggak nyaman",       color: "linear-gradient(145deg,#FDF0F2 0%,#F2A0B0 55%,#C8405A 100%)" },
+      { emoji: "🤍",    label: "Rela ngalah\ndemi pasangan",                               color: "linear-gradient(145deg,#F5EDE8 0%,#D4A8A0 55%,#8C6870 100%)" },
+    ]
+  },
+  // ── Q2 ──────────────────────────────────
+  {
+    type: 'swipe', scene: 'sc1',
+    bg: 'linear-gradient(135deg,#FBF6F0 0%,#F5EDE8 45%,#EAC898 100%)',
+    text: "Kalau situasi mulai\nmemanas, kamu\nbiasanya lebih…",
+    cards: [
+      { emoji: "🫣",  label: "Cenderung menghindari\nkeputusan yang bisa\nmemicu konflik",  color: "linear-gradient(145deg,#FBF6F0 0%,#EAC898 55%,#C4923A 100%)" },
+      { emoji: "🤝",  label: "Berusaha cari\njalan tengah biar\nsama-sama oke",            color: "linear-gradient(145deg,#F5EAF0 0%,#C89AB0 55%,#8C5070 100%)" },
+    ]
+  },
+  // ── Q3 ──────────────────────────────────
+  {
+    type: 'swipe', scene: 'sc2',
+    bg: 'linear-gradient(135deg,#FDF0F2 0%,#F9E8EC 45%,#F0D0D8 100%)',
+    text: "Pas ada situasi\nyang bikin serba\nsalah, kamu lebih…",
+    cards: [
+      { emoji: "🧊",  label: "Nggak mau suasana\njadi panas,\nhindarin aja",               color: "linear-gradient(145deg,#F5EAF0 0%,#C89AB0 55%,#8C5070 100%)" },
+      { emoji: "💡",  label: "Berusaha nemuin\nsolusi yang bikin\nkami sama-sama puas",     color: "linear-gradient(145deg,#FBF6F0 0%,#EAC898 55%,#C4923A 100%)" },
+    ]
+  },
+  // ── Q4 ──────────────────────────────────
+  {
+    type: 'swipe', scene: 'sc3',
+    bg: 'linear-gradient(135deg,#FBF6F0 0%,#F5EDE8 45%,#E0C8C0 100%)',
+    text: "Kalau lagi ada\nperbedaan keinginan,\nkamu biasanya…",
+    cards: [
+      { emoji: "🕊️", label: "Nggak mau\nribut",                                           color: "linear-gradient(145deg,#F7D6DC 0%,#E8909A 55%,#C8405A 100%)" },
+      { emoji: "🗣️", label: "Berani bilang\napa yang\naku mau",                           color: "linear-gradient(145deg,#FDF0F2 0%,#F2A0B0 55%,#C8405A 100%)" },
+    ]
+  },
+  // ── Q5 ──────────────────────────────────
+  {
+    type: 'swipe', scene: 'sc4',
+    bg: 'linear-gradient(135deg,#F9E8EC 0%,#F5D8E0 45%,#E8A8B8 100%)',
+    text: "Kalau obrolannya\nmulai nggak searah,\nkamu biasanya…",
+    cards: [
+      { emoji: "🥺",  label: "Ga mau nyakitin\nhati pasangan",                             color: "linear-gradient(145deg,#F9E8EC 0%,#D87080 55%,#7D1A2E 100%)" },
+      { emoji: "🧩",  label: "Cari solusi\nyang sama-sama enak",                           color: "linear-gradient(145deg,#FBF6F0 0%,#EAC898 55%,#C4923A 100%)" },
+    ]
+  },
+  // ── Q6 ──────────────────────────────────
+  {
+    type: 'swipe', scene: 'sc5',
+    bg: 'linear-gradient(135deg,#FBF6F0 0%,#EAE0F0 45%,#D4B8D0 100%)',
+    text: "Kalau lagi nggak\nsejalan sama pasangan,\nkamu biasanya…",
+    cards: [
+      { emoji: "🫶",  label: "Berusaha memenuhi\nkeinginan pasangan",                      color: "linear-gradient(145deg,#FBF6F0 0%,#EAC898 55%,#C4923A 100%)" },
+      { emoji: "💬",  label: "Terbuka soal\napa yang dirasakan",                           color: "linear-gradient(145deg,#F5EAF0 0%,#C89AB0 55%,#8C5070 100%)" },
+    ]
+  },
+  // ── Q7 ──────────────────────────────────
+  {
+    type: 'swipe', scene: 'sc6',
+    bg: 'linear-gradient(135deg,#FDF0F2 0%,#F5E0E8 45%,#E0B0C0 100%)',
+    text: "Pas pendapat\nkalian beda,\nkamu biasanya…",
+    cards: [
+      { emoji: "🤲",  label: "Nggak maksa pasangan\nbuat sepakat\nsama aku",               color: "linear-gradient(145deg,#F5EDE8 0%,#D4A8A0 55%,#8C6870 100%)" },
+      { emoji: "💪",  label: "Lebih suka\nmeyakinkan pasangan",                            color: "linear-gradient(145deg,#F7D6DC 0%,#E8909A 55%,#C8405A 100%)" },
+    ]
+  },
+  // ── Q8 ──────────────────────────────────
+  {
+    type: 'swipe', scene: 'sc-binary',
+    bg: 'linear-gradient(135deg,#FBF6F0 0%,#F0EAE0 45%,#D8C4A8 100%)',
+    text: "Waktu obrolan\nmulai nggak sejalan,\nkamu biasanya…",
+    cards: [
+      { emoji: "⚖️",  label: "Berusaha cari\ntitik tengah",                                color: "linear-gradient(145deg,#FBF6F0 0%,#EAC898 55%,#C4923A 100%)" },
+      { emoji: "👂",  label: "Menyampaikan pendapatku\ndan tetap dengerin\npasangan",      color: "linear-gradient(145deg,#F5EAF0 0%,#C89AB0 55%,#8C5070 100%)" },
+    ]
+  },
+  // ── Q9 ──────────────────────────────────
+  {
+    type: 'swipe', scene: 'sc-q9',
+    bg: 'linear-gradient(135deg,#FDF0F2 0%,#F2D8E0 45%,#E09890 100%)',
+    text: "Pas ada hal\nyang bikin hubungan\njadi awkward, kamu…",
+    cards: [
+      { emoji: "🫂",  label: "Ngajak buat\nnyelesaiin masalah\nbareng-bareng",             color: "linear-gradient(145deg,#F5EDE8 0%,#D4A8A0 55%,#8C6870 100%)" },
+      { emoji: "🎯",  label: "Komit sama\napa yang mau\naku capai",                        color: "linear-gradient(145deg,#F9E8EC 0%,#D87080 55%,#7D1A2E 100%)" },
+    ]
+  },
+  // ── Q10 ─────────────────────────────────
+  {
+    type: 'swipe', scene: 'sc-q10',
+    bg: 'linear-gradient(135deg,#FDF0F2 0%,#F7D6DC 45%,#EAA0A8 100%)',
+    text: "Waktu ada masalah\nyang cukup serius,\nkamu lebih…",
+    cards: [
+      { emoji: "🫱🫲", label: "Ngajak cari\njalan tengah bareng",                          color: "linear-gradient(145deg,#F5EDE8 0%,#D4A8A0 55%,#8C6870 100%)" },
+      { emoji: "💬",   label: "Jelasin alasan\nsaat ada perbedaan",                        color: "linear-gradient(145deg,#F5EAF0 0%,#C89AB0 55%,#8C5070 100%)" },
+    ]
+  },
+  // ── Q11 (rank) ──────────────────────────
+  {
+    type: 'rank', scene: 'sc-19',
+    bg: 'linear-gradient(135deg,#F9E8EC 0%,#F0D0E0 45%,#E0A8C0 100%)',
+    text: "Kalau lagi konflik,\nurutin yang paling\nkamu banget:",
+    cards: [
+      { emoji: "⏳",  label: "Bahas masalahnya\nnanti aja dulu",         color: "linear-gradient(145deg,#F5EAF0 0%,#C89AB0 55%,#8C5070 100%)" },
+      { emoji: "💭",  label: "Ngertiin apa yang\npasangan rasain",        color: "linear-gradient(145deg,#FBF6F0 0%,#EAC898 55%,#C4923A 100%)" },
+      { emoji: "🗝️", label: "Beri kebebasan\npasangan buat memilih",    color: "linear-gradient(145deg,#F5EDE8 0%,#D4A8A0 55%,#8C6870 100%)" },
+      { emoji: "✌️",  label: "Perbedaan nggak\njadi persoalan",          color: "linear-gradient(145deg,#FBF6F0 0%,#EAC898 55%,#C4923A 100%)" },
+      { emoji: "💎",  label: "Teguh sama\npendirian",                    color: "linear-gradient(145deg,#F7D6DC 0%,#E8909A 55%,#C8405A 100%)" },
+    ]
+  },
+];
+
+const POS_MAP = ['center','right','far-right','hidden','far-left','left'];
+
+/* ── state ── */
+let currentQ    = 0;
+let centerIdx   = 0;
+let selectedIdx = null;   // swipe questions
+let rankOrder   = [];     // rank question: rankOrder[cardIdx] = 1-4 or null
+let answers     = [];
+
+/* ── drag state ── */
+let dragging  = false;
+let startX    = 0;
+let lastDelta = 0;
+
+/* ═══════════════════════════════════════
+   RENDER
+═══════════════════════════════════════ */
+function render() {
+  const q        = QUESTIONS[currentQ];
+  const isRank   = q.type === 'rank';
+  const isBinary = q.type === 'binary';
+  const isSplit  = q.type === 'split';
+
+  document.getElementById('q-counter').textContent     = `${currentQ + 1} / ${QUESTIONS.length}`;
+  document.getElementById('progress-fill').style.width = (currentQ / QUESTIONS.length * 100) + '%';
+  document.getElementById('q-text').innerHTML          = q.text.replace(/\n/g,'<br>');
+
+  /* back button: visible from Q2 onward */
+  const backBtn   = document.getElementById('back-btn');
+  const headerLogo = document.getElementById('header-logo');
+  const showBack  = currentQ > 0;
+  backBtn.style.display    = showBack ? 'flex'  : 'none';
+  headerLogo.style.display = showBack ? 'none'  : 'block';
+
+  // eyebrow label
+  const eyebrow = document.getElementById('q-eyebrow');
+  eyebrow.textContent = isRank ? 'Urutin prioritasmu 👆' : isBinary ? 'Pilih salah satu 👇' : isSplit ? 'Tap untuk pilih 👇' : 'Pertanyaan';
+  eyebrow.classList.toggle('rank',   isRank);
+  eyebrow.classList.toggle('binary', isBinary);
+  eyebrow.classList.toggle('split',  isSplit);
+
+  // rank strip visibility
+  document.getElementById('rank-strip').classList.toggle('visible', isRank);
+
+  // swipe hint
+  document.getElementById('swipe-hint').classList.toggle('hidden', isRank || isBinary || isSplit);
+
+  // stage mode
+  const stage = document.getElementById('cards-stage');
+  stage.classList.toggle('rank-mode',   isRank);
+  stage.classList.toggle('binary-mode', isBinary);
+  stage.classList.toggle('split-mode',  isSplit);
+  stage.innerHTML = '';
+
+  if (isRank) {
+    rankOrder = new Array(q.cards.length).fill(null);
+    renderRankGrid();
+  } else if (isBinary) {
+    renderBinaryChoice();
+  } else if (isSplit) {
+    renderSplitChoice();
+  } else {
+    renderDeck();
+  }
+
+  renderDots();
+  renderBottom();
+  updateScene(currentQ);
+}
+
+/* ── swipe deck ─────────────────────────── */
+function renderDeck() {
+  const q     = QUESTIONS[currentQ];
+  const stage = document.getElementById('cards-stage');
+
+  q.cards.forEach((c, i) => {
+    const card = document.createElement('div');
+    card.className   = 'card';
+    card.dataset.idx = i;
+    card.innerHTML = `
+      <div class="card-inner">
+        <div class="ci-bg" style="background:${c.color}"></div>
+        <div class="ci-gl"></div><div class="ci-gr"></div><div class="ci-gc"></div>
+        ${c.emoji ? `<div class="ci-emoji">${c.emoji}</div>` : ''}
+        <div class="ci-label">${c.label.replace(/\n/g,'<br>')}</div>
+      </div>
+      <div class="card-check">✓</div>
+    `;
+    stage.appendChild(card);
+  });
+
+  updatePositions();
+}
+
+/* ── binary choice ──────────────────────── */
+function renderBinaryChoice() {
+  const q     = QUESTIONS[currentQ];
+  const stage = document.getElementById('cards-stage');
+
+  q.cards.forEach((c, i) => {
+    const card = document.createElement('div');
+    card.className   = 'card';
+    card.dataset.idx = i;
+    card.innerHTML = `
+      <div class="card-inner">
+        <div class="ci-bg" style="background:${c.color}"></div>
+        <div class="ci-gl"></div><div class="ci-gr"></div><div class="ci-gc"></div>
+        ${c.emoji ? `<div class="ci-emoji">${c.emoji}</div>` : ''}
+        <div class="ci-label">${c.label.replace(/\n/g,'<br>')}</div>
+      </div>
+      <div class="card-check">✓</div>
+    `;
+    stage.appendChild(card);
+    // insert VS divider between the two cards
+    if (i === 0) {
+      const vs = document.createElement('div');
+      vs.className = 'vs-divider';
+      vs.innerHTML = '<div class="vs-label">VS</div>';
+      stage.appendChild(vs);
+    }
+  });
+}
+
+/* ── split choice ───────────────────────── */
+function renderSplitChoice() {
+  const q     = QUESTIONS[currentQ];
+  const stage = document.getElementById('cards-stage');
+
+  const makeHalf = (c, cls, idx) => {
+    const h = document.createElement('div');
+    h.className  = `split-half ${cls}`;
+    h.dataset.idx = idx;
+    h.innerHTML = `
+      <div class="split-bg" style="background:${c.color}">
+        <div class="ci-gl"></div><div class="ci-gr"></div><div class="ci-gc"></div>
+      </div>
+      <div class="split-label">${c.label.replace(/\n/g,'<br>')}</div>
+      <div class="split-check">✓</div>
+    `;
+    return h;
+  };
+
+  stage.appendChild(makeHalf(q.cards[0], 'split-half-a', 0));
+  stage.appendChild(makeHalf(q.cards[1], 'split-half-b', 1));
+
+  // Diagonal blade overlay
+  const blade = document.createElement('div');
+  blade.className = 'split-blade';
+  blade.innerHTML = `<svg width="100%" height="100%" viewBox="0 0 375 320" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <line x1="213" y1="0" x2="157" y2="320" stroke="rgba(255,255,255,0.12)" stroke-width="10"/>
+    <line x1="213" y1="0" x2="157" y2="320" stroke="rgba(255,255,255,0.40)" stroke-width="1.5"/>
+  </svg>`;
+  stage.appendChild(blade);
+}
+
+/* ── rank list ──────────────────────────── */
+function renderRankGrid() {
+  const q     = QUESTIONS[currentQ];
+  const stage = document.getElementById('cards-stage');
+
+  q.cards.forEach((c, i) => {
+    const row = document.createElement('div');
+    row.className   = 'rank-row';
+    row.dataset.idx = i;
+    row.innerHTML = `
+      <div class="rank-row-badge" id="rbadge-${i}"></div>
+      ${c.emoji ? `<div class="rank-row-emoji">${c.emoji}</div>` : ''}
+      <div class="rank-row-label">${c.label.replace(/\n/g,'<br>')}</div>
+    `;
+    stage.appendChild(row);
+  });
+}
+
+function updateRankDisplay() {
+  const q = QUESTIONS[currentQ];
+  q.cards.forEach((_, i) => {
+    const row   = document.querySelector(`.rank-row[data-idx="${i}"]`);
+    const badge = document.getElementById(`rbadge-${i}`);
+    if (!row || !badge) return;
+    const rank = rankOrder[i];
+    row.classList.toggle('rank-done', rank !== null);
+    badge.textContent = rank !== null ? rank : '';
+  });
+}
+
+function updateRankPips() {
+  const n    = QUESTIONS[currentQ].cards.length;
+  const done = rankOrder.filter(r => r !== null).length;
+  const pips = document.getElementById('rank-pips');
+  if (!pips) return;
+  pips.innerHTML = Array.from({ length: n }, (_, i) =>
+    `<div class="rank-pip${i < done ? ' filled' : ''}">${i < done ? i+1 : ''}</div>`
+  ).join('');
+}
+
+/* ── positions for swipe deck ────────────── */
+function posFor(cardIdx) {
+  const n = QUESTIONS[currentQ].cards.length;
+  // 2-card deck: non-center card peeks from the natural side
+  if (n === 2) {
+    if (cardIdx === centerIdx) return 'center';
+    return cardIdx > centerIdx ? 'right' : 'left';
+  }
+  const rel    = ((cardIdx - centerIdx) % n + n) % n;
+  const signed = rel > n / 2 ? rel - n : rel;
+  const clamp  = Math.max(-2, Math.min(2, signed));
+  return POS_MAP[((clamp % 6) + 6) % 6];
+}
+function updatePositions() {
+  const isSwipe = QUESTIONS[currentQ].type === 'swipe';
+  const n = QUESTIONS[currentQ].cards.length;
+  document.querySelectorAll('.card').forEach(c => {
+    c.dataset.pos = posFor(+c.dataset.idx);
+    c.classList.remove('peek-left', 'peek-right');
+    const sel = isSwipe ? (+c.dataset.idx === centerIdx) : (+c.dataset.idx === selectedIdx);
+    c.classList.toggle('is-selected', sel);
+  });
+  if (isSwipe && n === 2) {
+    const cc = document.querySelector('.card[data-pos="center"]');
+    if (cc) cc.classList.add(centerIdx === 0 ? 'peek-right' : 'peek-left');
+  }
+}
+
+/* ── dots ───────────────────────────────── */
+function renderDots() {
+  const q    = QUESTIONS[currentQ];
+  const n    = q.cards.length;
+  const dots = document.getElementById('dots');
+  if (q.type === 'rank' || q.type === 'binary' || q.type === 'split') { dots.innerHTML = ''; return; }
+  dots.innerHTML = Array.from({ length: n }, (_, i) =>
+    `<div class="dot${i === centerIdx ? ' active' : ''}"></div>`
+  ).join('');
+}
+
+/* ── bottom ─────────────────────────────── */
+function renderBottom() {
+  const q    = QUESTIONS[currentQ];
+  const hint = document.getElementById('hint-text');
+  const btn  = document.getElementById('next-btn');
+  const lbl  = document.getElementById('next-label');
+
+  if (q.type === 'rank') {
+    btn.style.display = '';
+    const done  = rankOrder.filter(r => r !== null).length;
+    const total = q.cards.length;
+    const full  = done === total;
+    hint.textContent = full
+      ? '✓ Semua sudah diurutkan!'
+      : `Tap untuk pilih peringkat ${done + 1} dari ${total}`;
+    hint.classList.toggle('selected', full);
+    btn.classList.toggle('active', full);
+    lbl.textContent = full
+      ? (currentQ === QUESTIONS.length - 1 ? 'Lihat Hasilku' : 'Lanjut')
+      : 'Urutkan semua dulu';
+
+  } else if (q.type === 'swipe') {
+    btn.style.display = '';
+    btn.classList.add('active');
+    hint.textContent  = '';
+    hint.classList.remove('selected');
+    lbl.textContent   = currentQ === QUESTIONS.length - 1 ? 'Lihat Hasilku' : 'Lanjut';
+
+  } else {
+    // binary / split — tap selects, Lanjut advances
+    const picked = selectedIdx !== null;
+    btn.style.display = '';
+    btn.classList.toggle('active', picked);
+    hint.textContent  = picked
+      ? '✓ Pilihan tercatat!'
+      : (q.type === 'split' ? 'Tap sisi yang paling kamu banget' : 'Tap kartu yang paling kamu banget');
+    hint.classList.toggle('selected', picked);
+    lbl.textContent = currentQ === QUESTIONS.length - 1 ? 'Lihat Hasilku' : 'Lanjut';
+  }
+}
+
+/* ═══════════════════════════════════════
+   DRAG — swipe deck only
+═══════════════════════════════════════ */
+document.addEventListener('mousedown', onStart);
+document.addEventListener('touchstart', onStart, { passive: true });
+
+function onStart(e) {
+  const qtype = QUESTIONS[currentQ].type;
+  if (qtype === 'rank' || qtype === 'binary' || qtype === 'split') return;
+  const card = e.target.closest('.card');
+  if (!card || card.dataset.pos !== 'center') return;
+  dragging  = true;
+  lastDelta = 0;
+  startX    = e.touches ? e.touches[0].clientX : e.clientX;
+  card.classList.add('dragging');
+  window.addEventListener('mousemove', onMove);
+  window.addEventListener('touchmove', onMove, { passive: false });
+  window.addEventListener('mouseup',   onEnd);
+  window.addEventListener('touchend',  onEnd);
+}
+
+function onMove(e) {
+  if (!dragging) return;
+  if (e.cancelable) e.preventDefault();
+  const x = e.touches ? e.touches[0].clientX : e.clientX;
+  lastDelta = x - startX;
+  const center = document.querySelector('.card[data-pos="center"]');
+  if (!center) return;
+  const xBase = center.classList.contains('peek-left') ? 50 : center.classList.contains('peek-right') ? -50 : 0;
+  center.style.transform = `translate3d(${xBase + lastDelta}px,0,0) rotate(${3 + lastDelta * 0.06}deg)`;
+  center.classList.toggle('hint-right', lastDelta >  40);
+  center.classList.toggle('hint-left',  lastDelta < -40);
+}
+
+function onEnd() {
+  if (!dragging) return;
+  dragging = false;
+  window.removeEventListener('mousemove', onMove);
+  window.removeEventListener('touchmove', onMove);
+  window.removeEventListener('mouseup',   onEnd);
+  window.removeEventListener('touchend',  onEnd);
+  const center = document.querySelector('.card[data-pos="center"]');
+  if (center) { center.classList.remove('dragging','hint-right','hint-left'); center.style.transform = ''; }
+
+  const n = QUESTIONS[currentQ].cards.length;
+  if      (lastDelta < -55 && centerIdx < n-1) centerIdx++;
+  else if (lastDelta >  55 && centerIdx >   0) centerIdx--;
+
+  updatePositions(); renderDots(); renderBottom();
+}
+
+/* ═══════════════════════════════════════
+   STACK TRANSITION — auto-advance
+═══════════════════════════════════════ */
+function autoAdvance(answer) {
+  answers.push({ question: currentQ, type: QUESTIONS[currentQ].type, answer });
+
+  const stage    = document.getElementById('cards-stage');
+  const qwrap    = document.querySelector('.question-wrap');
+  const header   = document.querySelector('.header');
+  const progWr   = document.querySelector('.progress-wrap');
+  const bottom   = document.querySelector('.bottom');
+  const qtype    = QUESTIONS[currentQ].type;
+  const exitEase = 'cubic-bezier(0.4,0,0.6,1)';
+
+  /* helper: fade out the current scene ornament after `delay` ms */
+  function fadeOutScene(delay) {
+    const sceneId = QUESTIONS[currentQ].scene;
+    if (!sceneId) return;
+    const sceneEl = document.getElementById(sceneId);
+    if (!sceneEl) return;
+    setTimeout(() => {
+      sceneEl.style.transition = 'opacity 1.10s ease';
+      sceneEl.classList.remove('active');
+      setTimeout(() => { sceneEl.style.transition = ''; }, 1200);
+    }, delay);
+  }
+
+  if (qtype === 'swipe') {
+    /* ── Exit Layer 1 (0ms): selected card lifts, others stack ── */
+    const cards  = Array.from(stage.querySelectorAll('.card'));
+    const picked = cards.find(c => +c.dataset.idx === answer);
+    const others = cards.filter(c => +c.dataset.idx !== answer);
+
+    if (picked) {
+      picked.style.transition = 'transform 0.52s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.52s ease';
+      picked.style.transform  = 'translate3d(0,-12px,0) scale(1.07)';
+      picked.style.boxShadow  = 'rgba(255,255,255,0.82) 0 0 46px 13px, rgba(0,0,0,0.20) 0 24px 48px';
+      picked.style.zIndex     = '15';
+    }
+    others.forEach((c, n) => {
+      c.style.transition = 'transform 0.48s cubic-bezier(0.4,0,0.6,1), opacity 0.48s ease';
+      c.style.transform  = `translate3d(${(n + 1) * 5}px, 28px, 0) scale(0.86)`;
+      c.style.opacity    = '0.45';
+      c.style.zIndex     = '5';
+    });
+
+    /* ── Exit Layer 1b (440ms): cards stage flies up ── */
+    setTimeout(() => {
+      stage.style.transition = `transform 0.72s ${exitEase}, opacity 0.60s ease`;
+      stage.style.transform  = 'translateY(-96px)';
+      stage.style.opacity    = '0';
+    }, 440);
+
+    /* ── Exit Layer 2 (360ms): header + progress + question + lanjut ── */
+    setTimeout(() => {
+      header.style.transition = `opacity 0.46s ease, transform 0.52s ${exitEase}`;
+      header.style.transform  = 'translateY(-8px)';
+      header.style.opacity    = '0';
+      progWr.style.transition = 'opacity 0.40s ease';
+      progWr.style.opacity    = '0';
+      qwrap.style.transition  = `transform 0.58s ${exitEase}, opacity 0.48s ease`;
+      qwrap.style.transform   = 'translateY(-24px)';
+      qwrap.style.opacity     = '0';
+      bottom.style.transition = `opacity 0.40s ease, transform 0.46s ${exitEase}`;
+      bottom.style.transform  = 'translateY(10px)';
+      bottom.style.opacity    = '0';
+    }, 360);
+
+    /* ── Exit Layer 3 (900ms): Three.js ornament fades out ── */
+    fadeOutScene(900);
+
+    /* ── Exit Layer 4 (1100ms): doNext() → bg crossfades to new gradient ── */
+    setTimeout(doNext, 1100);
+
+  } else {
+    /* ── Exit Layer 1 (0ms): cards / stage exits ── */
+    stage.style.transition = `transform 0.58s ${exitEase}, opacity 0.50s ease`;
+    stage.style.transform  = 'translateY(-48px)';
+    stage.style.opacity    = '0';
+
+    /* ── Exit Layer 2 (260ms): header + progress + question + lanjut ── */
+    setTimeout(() => {
+      header.style.transition = `opacity 0.44s ease, transform 0.50s ${exitEase}`;
+      header.style.transform  = 'translateY(-8px)';
+      header.style.opacity    = '0';
+      progWr.style.transition = 'opacity 0.38s ease';
+      progWr.style.opacity    = '0';
+      qwrap.style.transition  = `transform 0.52s ${exitEase}, opacity 0.44s ease`;
+      qwrap.style.transform   = 'translateY(-20px)';
+      qwrap.style.opacity     = '0';
+      bottom.style.transition = 'opacity 0.38s ease';
+      bottom.style.opacity    = '0';
+    }, 260);
+
+    /* ── Exit Layer 3 (740ms): Three.js ornament fades out ── */
+    fadeOutScene(740);
+
+    /* ── Exit Layer 4 (940ms): doNext() → bg crossfades to new gradient ── */
+    setTimeout(doNext, 940);
+  }
+}
+
+
+/* ═══════════════════════════════════════
+   GO BACK — exit current Q, restore prev
+═══════════════════════════════════════ */
+function goBack() {
+  if (currentQ === 0 || answers.length === 0) return;
+
+  const stage    = document.getElementById('cards-stage');
+  const qwrap    = document.querySelector('.question-wrap');
+  const header   = document.querySelector('.header');
+  const progWr   = document.querySelector('.progress-wrap');
+  const bottom   = document.querySelector('.bottom');
+  const exitEase = 'cubic-bezier(0.4,0,0.6,1)';
+
+  /* ornament fades (same helper, pass current Q's sceneId directly) */
+  const sceneId = QUESTIONS[currentQ].scene;
+  if (sceneId) {
+    const sceneEl = document.getElementById(sceneId);
+    if (sceneEl) {
+      setTimeout(() => {
+        sceneEl.style.transition = 'opacity 0.65s ease';
+        sceneEl.classList.remove('active');
+        setTimeout(() => { sceneEl.style.transition = ''; }, 700);
+      }, 280);
+    }
+  }
+
+  /* Exit Layer 1 (0ms): cards slide DOWN — reversed direction */
+  stage.style.transition = `transform 0.44s ${exitEase}, opacity 0.36s ease`;
+  stage.style.transform  = 'translateY(72px)';
+  stage.style.opacity    = '0';
+
+  /* Exit Layer 2 (140ms): chrome drifts down + fades */
+  setTimeout(() => {
+    header.style.transition = `opacity 0.28s ease, transform 0.32s ${exitEase}`;
+    header.style.transform  = 'translateY(8px)';
+    header.style.opacity    = '0';
+    progWr.style.transition = 'opacity 0.24s ease';
+    progWr.style.opacity    = '0';
+    qwrap.style.transition  = `transform 0.36s ${exitEase}, opacity 0.30s ease`;
+    qwrap.style.transform   = 'translateY(20px)';
+    qwrap.style.opacity     = '0';
+    bottom.style.transition = 'opacity 0.24s ease';
+    bottom.style.opacity    = '0';
+  }, 140);
+
+  setTimeout(doBack, 560);
+}
+
+function doBack() {
+  /* pop the answer that was given for the question we're returning to,
+     so the user can freely re-answer it */
+  const restoredAnswer = answers[answers.length - 1];
+  answers.pop();
+  currentQ--;
+
+  /* restore selection state from the popped answer */
+  const q = QUESTIONS[currentQ];
+  if (q.type === 'swipe') {
+    centerIdx   = typeof restoredAnswer.answer === 'number' ? restoredAnswer.answer : 0;
+    selectedIdx = null;
+    rankOrder   = [];
+  } else if (q.type === 'rank') {
+    rankOrder   = Array.isArray(restoredAnswer.answer) ? [...restoredAnswer.answer] : [];
+    centerIdx   = 0;
+    selectedIdx = null;
+  } else {
+    selectedIdx = typeof restoredAnswer.answer === 'number' ? restoredAnswer.answer : null;
+    centerIdx   = 0;
+    rankOrder   = [];
+  }
+
+  const stage  = document.getElementById('cards-stage');
+  const qwrap  = document.querySelector('.question-wrap');
+  const header = document.querySelector('.header');
+  const progWr = document.querySelector('.progress-wrap');
+  const bottom = document.querySelector('.bottom');
+
+  /* snap residual styles */
+  stage.style.transition = 'none'; stage.style.transform = ''; stage.style.opacity = '';
+  qwrap.style.transition = 'none'; qwrap.style.transform = ''; qwrap.style.opacity = '';
+
+  /* start all UI elements hidden */
+  header.style.transition = 'none'; header.style.opacity = '0'; header.style.transform = 'translateY(10px)';
+  progWr.style.transition = 'none'; progWr.style.opacity = '0';
+  bottom.style.transition = 'none'; bottom.style.opacity = '0'; bottom.style.transform = 'translateY(-14px)';
+
+  render(); /* rebuild content + updateScene (bg crossfades) */
+
+  /* Layer 2: ornament fades in (same timing as doNext) */
+  const sceneEl = document.getElementById(QUESTIONS[currentQ].scene);
+  if (sceneEl) {
+    sceneEl.classList.remove('active');
+    sceneEl.style.transition = 'none';
+    void sceneEl.offsetWidth;
+    sceneEl.style.transition = 'opacity 1.80s ease';
+    setTimeout(() => {
+      sceneEl.classList.add('active');
+      setTimeout(() => { sceneEl.style.transition = ''; }, 1900);
+    }, 500);
+  }
+
+  /* Layer 3: chrome enters from ABOVE (translateY negative → 0) */
+  qwrap.style.opacity   = '0';
+  qwrap.style.transform = 'translateY(-30px)';
+  void header.offsetWidth;
+
+  setTimeout(() => {
+    const ease = 'cubic-bezier(0.22,1,0.36,1)';
+    header.style.transition = `opacity 0.60s ease, transform 0.75s ${ease}`;
+    header.style.opacity    = ''; header.style.transform = '';
+    progWr.style.transition = 'opacity 0.58s ease';
+    progWr.style.opacity    = '';
+    qwrap.style.transition  = `transform 0.75s ${ease}, opacity 0.60s ease`;
+    qwrap.style.transform   = ''; qwrap.style.opacity = '';
+    bottom.style.transition = `opacity 0.58s ease, transform 0.72s ${ease}`;
+    bottom.style.opacity    = ''; bottom.style.transform = '';
+    setTimeout(() => {
+      header.style.transition = header.style.transform = header.style.opacity = '';
+      progWr.style.transition = progWr.style.opacity = '';
+      qwrap.style.transition  = qwrap.style.transform  = qwrap.style.opacity  = '';
+      bottom.style.transition = bottom.style.transform = bottom.style.opacity = '';
+    }, 950);
+  }, 580);
+
+  /* Layer 4: cards drop from ABOVE */
+  if (q.type === 'swipe') {
+    const cards = Array.from(stage.querySelectorAll('.card'));
+    cards.forEach(c => {
+      c.style.transition = 'none';
+      c.style.transform  = 'translate3d(0, -68px, 0) scale(0.94)'; /* from above */
+      c.style.opacity    = '0';
+    });
+    void stage.offsetWidth;
+    cards.forEach((c, idx) => {
+      setTimeout(() => {
+        c.style.transition = 'transform 0.85s cubic-bezier(0.22,1,0.36,1), opacity 0.55s ease';
+        c.style.transform  = '';
+        c.style.opacity    = '';
+        setTimeout(() => { c.style.transition = c.style.transform = c.style.opacity = ''; }, 950);
+      }, 900 + idx * 120);
+    });
+  } else {
+    stage.style.transition = 'none';
+    stage.style.transform  = 'translateY(-48px)'; /* from above */
+    stage.style.opacity    = '0';
+    void stage.offsetWidth;
+    setTimeout(() => {
+      stage.style.transition = 'transform 0.85s cubic-bezier(0.22,1,0.36,1), opacity 0.60s ease';
+      stage.style.transform  = ''; stage.style.opacity = '';
+      setTimeout(() => { stage.style.transition = stage.style.transform = stage.style.opacity = ''; }, 950);
+    }, 880);
+  }
+}
+
+
+function doNext() {
+  if (currentQ >= QUESTIONS.length - 1) {
+    localStorage.setItem('conflictAnswers', JSON.stringify(answers));
+    localStorage.setItem('selectedProfile', 'The Time Bomb');
+    triggerStackingTransition();
+    return;
+  }
+
+  currentQ++;
+  centerIdx   = 0;
+  selectedIdx = null;
+  rankOrder   = [];
+
+  const stage  = document.getElementById('cards-stage');
+  const qwrap  = document.querySelector('.question-wrap');
+  const header = document.querySelector('.header');
+  const progWr = document.querySelector('.progress-wrap');
+  const bottom = document.querySelector('.bottom');
+
+  /* Snap stage & qwrap back instantly (no residual transitions) */
+  stage.style.transition = 'none';
+  stage.style.transform  = '';
+  stage.style.opacity    = '';
+  qwrap.style.transition = 'none';
+  qwrap.style.transform  = '';
+  qwrap.style.opacity    = '';
+
+  /* Keep all UI elements hidden while we build the next state */
+  header.style.transition = 'none';
+  header.style.opacity    = '0';
+  header.style.transform  = 'translateY(-10px)';
+  progWr.style.transition = 'none';
+  progWr.style.opacity    = '0';
+  bottom.style.transition = 'none';
+  bottom.style.opacity    = '0';
+  bottom.style.transform  = 'translateY(14px)';
+
+  render(); /* fills stage with new question's cards + updateScene() → bg + scene.active */
+
+  const q = QUESTIONS[currentQ];
+
+  /* ── Layer 2: ornament scene (500ms delay, 1.80s fade-in) ── */
+  const sceneEl = document.getElementById(q.scene);
+  if (sceneEl) {
+    sceneEl.classList.remove('active');
+    sceneEl.style.transition = 'none';
+    void sceneEl.offsetWidth;
+    sceneEl.style.transition = 'opacity 1.80s ease';
+    setTimeout(() => {
+      sceneEl.classList.add('active');
+      setTimeout(() => { sceneEl.style.transition = ''; }, 1900);
+    }, 500);
+  }
+
+  /* ── Layer 3: header + progWr + qwrap + bottom (580ms delay) ── */
+  qwrap.style.opacity   = '0';
+  qwrap.style.transform = 'translateY(30px)';
+  void header.offsetWidth; /* reflow: commit hidden starting state */
+
+  setTimeout(() => {
+    const ease = 'cubic-bezier(0.22,1,0.36,1)';
+    header.style.transition = `opacity 0.60s ease, transform 0.75s ${ease}`;
+    header.style.opacity    = '';
+    header.style.transform  = '';
+    progWr.style.transition = 'opacity 0.58s ease';
+    progWr.style.opacity    = '';
+    qwrap.style.transition  = `transform 0.75s ${ease}, opacity 0.60s ease`;
+    qwrap.style.transform   = '';
+    qwrap.style.opacity     = '';
+    bottom.style.transition = `opacity 0.58s ease, transform 0.72s ${ease}`;
+    bottom.style.opacity    = '';
+    bottom.style.transform  = '';
+    setTimeout(() => {
+      header.style.transition = header.style.transform = header.style.opacity = '';
+      progWr.style.transition = progWr.style.opacity = '';
+      qwrap.style.transition  = qwrap.style.transform  = qwrap.style.opacity  = '';
+      bottom.style.transition = bottom.style.transform = bottom.style.opacity = '';
+    }, 950);
+  }, 580);
+
+  /* ── Layer 4: cards (900ms+, 120ms stagger between each) ── */
+  if (q.type === 'swipe') {
+    const cards = Array.from(stage.querySelectorAll('.card'));
+    cards.forEach(c => {
+      c.style.transition = 'none';
+      c.style.transform  = 'translate3d(0, 68px, 0) scale(0.94)';
+      c.style.opacity    = '0';
+    });
+    void stage.offsetWidth;
+    cards.forEach((c, idx) => {
+      setTimeout(() => {
+        c.style.transition = 'transform 0.85s cubic-bezier(0.22,1,0.36,1), opacity 0.55s ease';
+        c.style.transform  = '';
+        c.style.opacity    = '';
+        setTimeout(() => { c.style.transition = c.style.transform = c.style.opacity = ''; }, 950);
+      }, 900 + idx * 120);
+    });
+
+  } else {
+    /* Stage-level enter for rank / binary / split */
+    stage.style.transition = 'none';
+    stage.style.transform  = 'translateY(48px)';
+    stage.style.opacity    = '0';
+    void stage.offsetWidth;
+    setTimeout(() => {
+      stage.style.transition = 'transform 0.85s cubic-bezier(0.22,1,0.36,1), opacity 0.60s ease';
+      stage.style.transform  = '';
+      stage.style.opacity    = '';
+      setTimeout(() => { stage.style.transition = stage.style.transform = stage.style.opacity = ''; }, 950);
+    }, 880);
+  }
+}
+
+/* ═══════════════════════════════════════
+   TAP handlers
+═══════════════════════════════════════ */
+document.addEventListener('click', e => {
+  if (Math.abs(lastDelta) > 12) { lastDelta = 0; return; }
+
+  /* ── split tap — select only, Lanjut advances ── */
+  if (QUESTIONS[currentQ].type === 'split') {
+    const half = e.target.closest('.split-half');
+    if (!half) return;
+    const i     = +half.dataset.idx;
+    const stage = document.getElementById('cards-stage');
+    selectedIdx = i;
+    stage.classList.remove('sel-a', 'sel-b');
+    stage.classList.add(i === 0 ? 'sel-a' : 'sel-b');
+    renderBottom();
+    return;
+  }
+
+  /* ── rank tap ── */
+  if (QUESTIONS[currentQ].type === 'rank') {
+    const row = e.target.closest('.rank-row');
+    if (!row) return;
+    const i = +row.dataset.idx;
+    const existing = rankOrder[i];
+    if (existing !== null) {
+      rankOrder[i] = null;
+      for (let j = 0; j < rankOrder.length; j++) {
+        if (rankOrder[j] !== null && rankOrder[j] > existing) rankOrder[j]--;
+      }
+    } else {
+      rankOrder[i] = rankOrder.filter(r => r !== null).length + 1;
+    }
+    updateRankDisplay();
+    renderBottom();
+    return;
+  }
+
+  const card = e.target.closest('.card');
+  if (!card) return;
+
+  const i = +card.dataset.idx;
+
+  /* ── binary tap — select only, Lanjut advances ── */
+  if (QUESTIONS[currentQ].type === 'binary') {
+    selectedIdx = i;
+    document.querySelectorAll('.binary-mode .card').forEach((c, ci) => {
+      c.classList.remove('b-selected', 'b-unselected');
+      c.classList.add(ci === i ? 'b-selected' : 'b-unselected');
+    });
+    renderBottom();
+    return;
+  }
+
+  /* ── swipe tap — change center card; Lanjut advances ── */
+  const pos = card.dataset.pos;
+  if (pos === 'left' || pos === 'right') {
+    centerIdx = i; updatePositions(); renderDots(); renderBottom();
+  }
+  // center tap no longer advances — use Lanjut button
+  lastDelta = 0;
+});
+
+/* ═══════════════════════════════════════
+   NEXT button — swipe uses centerIdx,
+   rank requires full ordering
+═══════════════════════════════════════ */
+document.getElementById('next-btn').addEventListener('click', () => {
+  const q = QUESTIONS[currentQ];
+  if (q.type === 'swipe') {
+    autoAdvance(centerIdx);
+  } else if (q.type === 'rank') {
+    if (rankOrder.filter(r => r !== null).length !== q.cards.length) return;
+    autoAdvance([...rankOrder]);
+  } else if (q.type === 'binary' || q.type === 'split') {
+    if (selectedIdx === null) return;
+    autoAdvance(selectedIdx);
+  }
+});
+
+/* ── scene switcher ─────────────────────── */
+function updateScene(q) {
+  document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
+  const sceneId = QUESTIONS[q].scene;
+  if (sceneId) {
+    const el = document.getElementById(sceneId);
+    if (el) el.classList.add('active');
+  }
+  /* background stays consistent — warm romantic CSS animation */
+}
+
+
+/* ═══════════════════════════════════════
+   THREE.JS ORNAMENT — Q4 (sc3)
+   Two opposing crystal shards orbiting
+   each other — "perbedaan keinginan"
+   Pink = avoid conflict  🕊️
+   Orange = speak up      🗣️
+═══════════════════════════════════════ */
+(function initAllScenes() {
+  if (typeof THREE === 'undefined') return;
+
+  /* ── device detection ── */
+  const isMob  = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) || window.devicePixelRatio > 1.5;
+  const maxDPR = isMob ? 1.5 : 2;
+
+  /* ── geometry complexity helpers (lower counts on mobile) ── */
+  const S = (hi, lo) => isMob ? lo : hi;   /* segment selector */
+  const NP = (hi, lo) => isMob ? lo : hi;  /* particle count   */
+
+  /* ── pause flag: stop rendering when tab is hidden ── */
+  let paused = document.hidden;
+  document.addEventListener('visibilitychange', () => { paused = document.hidden; });
+
+  /* ── lazy registry: scenes created only when first activated ── */
+  const registry = [];   /* { el, renderer, scene, cam, tick } — initialised */
+  const pending  = [];   /* { el, setupFn }                   — awaiting first activation */
+  let loopStarted = false, skipFrame = false;
+
+  function _initScene({ el, setupFn }) {
+    const canvas = document.createElement('canvas');
+    canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;';
+    el.appendChild(canvas);
+    const renderer = new THREE.WebGLRenderer({
+      canvas, alpha: true,
+      antialias: !isMob,
+      powerPreference: isMob ? 'default' : 'high-performance'
+    });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, maxDPR));
+    renderer.setClearColor(0x000000, 0);
+    const scene = new THREE.Scene();
+    const cam   = new THREE.PerspectiveCamera(52, 1, 0.1, 100);
+    cam.position.z = 5.0;
+    const tick = setupFn(scene, cam);
+    function resize() {
+      const w = el.clientWidth  || 390;
+      const h = el.clientHeight || 760;
+      renderer.setSize(w, h, false);
+      cam.aspect = w / h;
+      cam.updateProjectionMatrix();
+    }
+    resize();
+    new ResizeObserver(resize).observe(el);
+    registry.push({ el, renderer, scene, cam, tick });
+  }
+
+  function startLoop() {
+    if (loopStarted) return;
+    loopStarted = true;
+    (function loop() {
+      requestAnimationFrame(loop);
+      if (paused) return;
+      /* throttle to ~30 fps on mobile */
+      if (isMob) { skipFrame = !skipFrame; if (skipFrame) return; }
+      /* lazy-init any pending scene that just became active */
+      for (let i = pending.length - 1; i >= 0; i--) {
+        if (pending[i].el.classList.contains('active')) {
+          _initScene(pending.splice(i, 1)[0]);
+        }
+      }
+      /* render active scenes */
+      for (const s of registry) {
+        if (!s.el.classList.contains('active')) continue;
+        s.tick();
+        s.renderer.render(s.scene, s.cam);
+      }
+    })();
+  }
+
+  /* ── shared factory: defers WebGL context creation until scene is first shown ── */
+  function mkScene(id, setupFn) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    pending.push({ el, setupFn });
+    startLoop();
+  }
+
+  /* ── wireframe+fill helper ── */
+  function mkWire(geo, col, fillOp, wireOp) {
+    const g = new THREE.Group();
+    g.add(new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: fillOp, side: THREE.DoubleSide })));
+    g.add(new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: wireOp, wireframe: true })));
+    return g;
+  }
+
+  /* ══════════════════════════════════
+     sc0 / Q1 — CONFLICT KNOT: 3D torus knot + two counter-orbiting rings
+  ══════════════════════════════════ */
+  mkScene('sc0', (scene, cam) => {
+    cam.position.z = 5.8;
+
+    const COL_KNOT = 0xC89AB0;  /* soft mauve — the knot of conflict         */
+    const COL_RING = 0xC8405A;  /* rose       — the two parties entwined     */
+
+    /* ── Central torus knot (p=2,q=3 trefoil) ── */
+    const knotGeo = new THREE.TorusKnotGeometry(0.80, 0.092, S(88,52), 8, 2, 3);
+    const knot = new THREE.Group();
+    knot.add(new THREE.Mesh(knotGeo, new THREE.MeshBasicMaterial({
+      color: COL_KNOT, transparent: true, opacity: 0.08, side: THREE.DoubleSide
+    })));
+    knot.add(new THREE.Mesh(knotGeo, new THREE.MeshBasicMaterial({
+      color: COL_KNOT, transparent: true, opacity: 0.44, wireframe: true
+    })));
+    scene.add(knot);
+
+    /* ── Two orbiting rings — caught inside the knot ── */
+    function mkRing(col, tubeR) {
+      const geo = new THREE.TorusGeometry(0.50, tubeR, 6, S(44,28));
+      const g = new THREE.Group();
+      g.add(new THREE.Mesh(geo, new THREE.MeshBasicMaterial({
+        color: col, transparent: true, opacity: 0.09, side: THREE.DoubleSide
+      })));
+      g.add(new THREE.Mesh(geo, new THREE.MeshBasicMaterial({
+        color: col, transparent: true, opacity: 0.46, wireframe: true
+      })));
+      return g;
+    }
+
+    const ringA = mkRing(COL_RING, 0.038);
+    const ringB = mkRing(COL_RING, 0.030);
+    /* tilt them differently for interlocked feel */
+    ringA.rotation.x = Math.PI * 0.30;
+    ringA.rotation.z = Math.PI * 0.10;
+    ringB.rotation.x = Math.PI * 0.70;
+    ringB.rotation.z = -Math.PI * 0.12;
+    scene.add(ringA, ringB);
+
+    /* ── Soft ambient particles ── */
+    const N = NP(24, 14);
+    const pA  = Array.from({ length: N }, (_, i) => (i / N) * Math.PI * 2);
+    const pR  = pA.map(() => 1.68 + Math.random() * 0.65);
+    const pSp = pA.map(() => 0.0016 + Math.random() * 0.0014);
+    const pZ  = pA.map(() => (Math.random() - 0.5) * 1.1);
+    const pPos = new Float32Array(N * 3);
+    const pGeo = new THREE.BufferGeometry();
+    pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+    scene.add(new THREE.Points(pGeo, new THREE.PointsMaterial({
+      color: COL_KNOT, size: 0.042, transparent: true, opacity: 0.30
+    })));
+
+    let t = 0;
+    return () => {
+      t += 0.007;
+
+      /* knot tumbles gently — reveals its 3D form continuously */
+      knot.rotation.y += 0.0038;
+      knot.rotation.x  = Math.sin(t * 0.32) * 0.18;
+      knot.rotation.z  = Math.sin(t * 0.25) * 0.10;
+
+      /* rings counter-rotate — the two parties struggling against each other */
+      ringA.rotation.y += 0.0055;
+      ringA.rotation.z  = Math.PI * 0.10 + Math.sin(t * 0.42) * 0.08;
+      ringB.rotation.y -= 0.0048;
+      ringB.rotation.z  = -Math.PI * 0.12 + Math.sin(t * 0.38 + 1.4) * 0.08;
+
+      /* gentle opposing float */
+      ringA.position.y =  Math.sin(t * 0.50) * 0.14;
+      ringB.position.y = -Math.sin(t * 0.50) * 0.14;
+
+      /* very subtle pulse */
+      const s = 1 + Math.sin(t * 1.05) * 0.018;
+      knot.scale.setScalar(s);
+
+      /* drift particles in ellipse */
+      for (let i = 0; i < N; i++) {
+        pA[i] += pSp[i];
+        pPos[i*3]   = Math.cos(pA[i]) * pR[i];
+        pPos[i*3+1] = Math.sin(pA[i]) * pR[i] * 0.54;
+        pPos[i*3+2] = pZ[i];
+      }
+      pGeo.attributes.position.needsUpdate = true;
+    };
+  });
+
+  /* ══════════════════════════════════
+     sc1 / Q2 — PULSING HEAT SPHERE: glowing orb + expanding heat rings
+  ══════════════════════════════════ */
+  mkScene('sc1', (scene, cam) => {
+    cam.position.z = 5.5;
+
+    const COL_CORE = 0xC8405A;  /* rose — the heat source   */
+    const COL_RING = 0x8C5070;  /* mauve — expanding waves  */
+
+    /* ── Layered glowing orb ── */
+    const core = new THREE.Group();
+    scene.add(core);
+
+    /* solid fill */
+    core.add(new THREE.Mesh(
+      new THREE.IcosahedronGeometry(0.30, S(2,1)),
+      new THREE.MeshBasicMaterial({ color: COL_CORE, transparent: true, opacity: 0.18 })
+    ));
+    /* wireframe shell — shows 3D structure */
+    core.add(new THREE.Mesh(
+      new THREE.IcosahedronGeometry(0.30, 1),
+      new THREE.MeshBasicMaterial({ color: COL_CORE, transparent: true, opacity: 0.75, wireframe: true })
+    ));
+    /* inner halo */
+    core.add(new THREE.Mesh(
+      new THREE.IcosahedronGeometry(0.52, 1),
+      new THREE.MeshBasicMaterial({ color: COL_CORE, transparent: true, opacity: 0.11, side: THREE.BackSide })
+    ));
+    /* outer glow */
+    core.add(new THREE.Mesh(
+      new THREE.IcosahedronGeometry(0.82, 1),
+      new THREE.MeshBasicMaterial({ color: 0xC4923A, transparent: true, opacity: 0.045, side: THREE.BackSide })
+    ));
+
+    /* ── 4 expanding heat-wave rings ── */
+    /* Horizontal (rotation.x = π/2) so they read as ripples from above,
+       slight tilt on Z for 3-D perspective */
+    const NR = 4;
+    const ringMats = [];
+    const ringMeshes = [];
+    for (let i = 0; i < NR; i++) {
+      const mat = new THREE.MeshBasicMaterial({ color: COL_RING, transparent: true, opacity: 0 });
+      const mesh = new THREE.Mesh(new THREE.TorusGeometry(1, 0.020, 6, S(52,36)), mat);
+      mesh.rotation.x = Math.PI / 2 - 0.22;  /* tilt reveals elliptical 3-D shape */
+      scene.add(mesh);
+      ringMeshes.push(mesh);
+      ringMats.push(mat);
+    }
+
+    /* ── Gentle rising heat particles (sparse, slow) ── */
+    const NP1 = NP(20, 10), pPos = new Float32Array(NP1 * 3), pVel = [];
+    for (let i = 0; i < NP1; i++) {
+      pPos[i*3]   = (Math.random() - 0.5) * 3.2;
+      pPos[i*3+1] = -3.5 - Math.random() * 2.5;
+      pPos[i*3+2] = (Math.random() - 0.5) * 1.0;
+      pVel.push({ x: (Math.random()-0.5)*0.004, y: 0.009 + Math.random()*0.010 });
+    }
+    const pGeo = new THREE.BufferGeometry();
+    pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+    scene.add(new THREE.Points(pGeo, new THREE.PointsMaterial({
+      color: 0xC4923A, size: 0.048, transparent: true, opacity: 0.38
+    })));
+
+    let t = 0;
+    return () => {
+      t += 0.008;
+
+      /* core breathes — expand on inhale, contract on exhale */
+      const breathe = 1 + Math.sin(t * 1.75) * 0.16;
+      core.scale.setScalar(breathe);
+      core.rotation.y += 0.007;
+      core.rotation.x  = Math.sin(t * 0.38) * 0.09;
+      core.position.y  = Math.sin(t * 0.52) * 0.10;
+
+      /* heat rings: linear 0→1 progress per ring, evenly phase-staggered */
+      for (let i = 0; i < NR; i++) {
+        const raw  = ((t * 0.16 + i / NR) % 1.0);
+        /* smoothstep — rings accelerate slightly as they expand */
+        const prog = raw * raw * (3 - 2 * raw);
+
+        /* scale: near-zero at birth, wide at death */
+        const sc = 0.18 + prog * 2.55;
+        ringMeshes[i].scale.set(sc, sc, 1);
+
+        /* drift upward slightly — heat rises */
+        ringMeshes[i].position.y = -0.10 + prog * 0.55;
+
+        /* opacity: bright at start, fully transparent at end */
+        ringMats[i].opacity = (1 - prog) * 0.52;
+      }
+
+      /* update sparse rising particles */
+      for (let i = 0; i < NP1; i++) {
+        pPos[i*3]   += pVel[i].x + Math.sin(t * 0.9 + i) * 0.002;
+        pPos[i*3+1] += pVel[i].y;
+        if (pPos[i*3+1] > 4.2) {
+          pPos[i*3]   = (Math.random() - 0.5) * 3.2;
+          pPos[i*3+1] = -3.5 - Math.random() * 2.0;
+          pPos[i*3+2] = (Math.random() - 0.5) * 1.0;
+          pVel[i].x   = (Math.random()-0.5)*0.004;
+          pVel[i].y   = 0.009 + Math.random()*0.010;
+        }
+      }
+      pGeo.attributes.position.needsUpdate = true;
+    };
+  });
+
+  /* ══════════════════════════════════
+     sc2 / Q3 — PROHIBITION: subtle 3D "no" circle + diagonal bar
+  ══════════════════════════════════ */
+  mkScene('sc2', (scene, cam) => {
+    cam.position.z = 5.5;
+
+    const COL = 0xC8405A;  /* rose — warm editorial palette */
+    const group = new THREE.Group();
+    scene.add(group);
+
+    /* ── Circle ring (torus) ── */
+    group.add(new THREE.Mesh(
+      new THREE.TorusGeometry(1.18, 0.032, 6, S(72,48)),
+      new THREE.MeshBasicMaterial({ color: COL, transparent: true, opacity: 0.52 })
+    ));
+
+    /* ── Disc fill (very subtle) ── */
+    group.add(new THREE.Mesh(
+      new THREE.CircleGeometry(1.18, S(64,40)),
+      new THREE.MeshBasicMaterial({ color: COL, transparent: true, opacity: 0.045, side: THREE.DoubleSide })
+    ));
+
+    /* ── Diagonal bar at 45° — passes through circle center ── */
+    const bar = new THREE.Mesh(
+      new THREE.BoxGeometry(2.52, 0.050, 0.050),
+      new THREE.MeshBasicMaterial({ color: COL, transparent: true, opacity: 0.52 })
+    );
+    bar.rotation.z = Math.PI / 4;
+    group.add(bar);
+
+    /* tilt on X to reveal 3D depth immediately */
+    group.rotation.x = 0.28;
+
+    /* ── Soft elliptical orbiting particles ── */
+    const N = NP(24, 14);
+    const pAngles = Array.from({ length: N }, (_, i) => (i / N) * Math.PI * 2);
+    const pRadii  = pAngles.map(() => 1.82 + (Math.random() - 0.5) * 0.75);
+    const pSpeeds = pAngles.map(() => 0.0020 + Math.random() * 0.0016);
+    const pZ      = pAngles.map(() => (Math.random() - 0.5) * 0.85);
+    const pPos    = new Float32Array(N * 3);
+    const pGeo    = new THREE.BufferGeometry();
+    pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+    scene.add(new THREE.Points(pGeo, new THREE.PointsMaterial({
+      color: COL, size: 0.046, transparent: true, opacity: 0.36
+    })));
+
+    let t = 0;
+    return () => {
+      t += 0.007;
+
+      /* slow Y rotation reveals 3D ring + bar depth */
+      group.rotation.y += 0.0030;
+      /* gentle X breathe */
+      group.rotation.x = 0.28 + Math.sin(t * 0.38) * 0.055;
+      /* very subtle scale pulse */
+      const s = 1 + Math.sin(t * 1.15) * 0.018;
+      group.scale.set(s, s, s);
+
+      /* orbit particles in an ellipse (matches tilted ring's apparent shape) */
+      for (let i = 0; i < N; i++) {
+        pAngles[i] += pSpeeds[i];
+        pPos[i*3]   = Math.cos(pAngles[i]) * pRadii[i];
+        pPos[i*3+1] = Math.sin(pAngles[i]) * pRadii[i] * 0.60;
+        pPos[i*3+2] = pZ[i];
+      }
+      pGeo.attributes.position.needsUpdate = true;
+    };
+  });
+
+  /* ══════════════════════════════════
+     sc3 / Q4 — COLLIDING ORBS: two glowing spheres approaching, tension, retreating
+  ══════════════════════════════════ */
+  mkScene('sc3', (scene, cam) => {
+    cam.position.z = 5.8;
+
+    const COL_A = 0xC8405A;  /* rose        */
+    const COL_B = 0xF2A0B0;  /* rose-light  */
+
+    /* ── build a layered glow orb ── */
+    function mkOrb(col) {
+      const g = new THREE.Group();
+      /* core — bright, solid-ish */
+      g.add(new THREE.Mesh(
+        new THREE.IcosahedronGeometry(0.27, 2),
+        new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.78 })
+      ));
+      /* wireframe shell on core */
+      g.add(new THREE.Mesh(
+        new THREE.IcosahedronGeometry(0.27, 1),
+        new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.30, wireframe: true })
+      ));
+      /* inner halo */
+      g.add(new THREE.Mesh(
+        new THREE.IcosahedronGeometry(0.46, 1),
+        new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.16, side: THREE.BackSide })
+      ));
+      /* outer halo */
+      g.add(new THREE.Mesh(
+        new THREE.IcosahedronGeometry(0.70, 1),
+        new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.06, side: THREE.BackSide })
+      ));
+      return g;
+    }
+
+    const orbA = mkOrb(COL_A);
+    const orbB = mkOrb(COL_B);
+    scene.add(orbA);
+    scene.add(orbB);
+
+    /* ── connection line that materialises when orbs are close ── */
+    const lineBuf = new Float32Array(6); /* 2 × xyz */
+    const lineGeo = new THREE.BufferGeometry();
+    lineGeo.setAttribute('position', new THREE.BufferAttribute(lineBuf, 3));
+    const lineMat = new THREE.LineBasicMaterial({ color: 0xC8405A, transparent: true, opacity: 0 });
+    scene.add(new THREE.Line(lineGeo, lineMat));
+
+    /* ── orbital particles around each orb ── */
+    const NP3 = NP(18, 10);
+    function mkOrbParticles(col) {
+      const pos    = new Float32Array(NP3 * 3);
+      const angles = Array.from({ length: NP3 }, (_, i) => (i / NP3) * Math.PI * 2);
+      const radii  = angles.map(() => 0.52 + Math.random() * 0.28);
+      const geo    = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      scene.add(new THREE.Points(geo, new THREE.PointsMaterial({
+        color: col, size: 0.040, transparent: true, opacity: 0.38
+      })));
+      return { pos, geo, angles, radii };
+    }
+    const partA = mkOrbParticles(COL_A);
+    const partB = mkOrbParticles(COL_B);
+
+    const MAX_DIST = 2.20;
+    const MIN_DIST = 0.44;
+
+    let t = 0;
+    return () => {
+      t += 0.008;
+
+      /* smooth approach/retreat on a sine wave — eased so it lingers at close range */
+      const raw   = (Math.sin(t * 0.55) + 1) * 0.5;          /* 0 → 1 → 0        */
+      const eased = raw * raw * (3 - 2 * raw);                /* smoothstep        */
+      const dist  = MIN_DIST + (MAX_DIST - MIN_DIST) * (1 - eased);
+
+      /* slight perpendicular drift for 3-D feel */
+      const driftY = Math.sin(t * 0.28) * 0.18;
+      const driftZ = Math.cos(t * 0.22) * 0.20;
+      orbA.position.set(-dist,  driftY,  driftZ);
+      orbB.position.set( dist, -driftY, -driftZ);
+
+      /* orbs grow subtly as they approach — urgency */
+      const sc = 1.0 + eased * 0.18;
+      orbA.scale.setScalar(sc);
+      orbB.scale.setScalar(sc);
+
+      /* self-rotation */
+      orbA.rotation.y += 0.009;
+      orbA.rotation.x  = Math.sin(t * 0.35) * 0.12;
+      orbB.rotation.y -= 0.008;
+      orbB.rotation.x  = Math.sin(t * 0.35 + 1.2) * 0.12;
+
+      /* connection line fades in near collision */
+      const proximity = Math.max(0, 1 - dist / 1.1);
+      lineMat.opacity = proximity * 0.28;
+      lineBuf[0] = orbA.position.x; lineBuf[1] = orbA.position.y; lineBuf[2] = orbA.position.z;
+      lineBuf[3] = orbB.position.x; lineBuf[4] = orbB.position.y; lineBuf[5] = orbB.position.z;
+      lineGeo.attributes.position.needsUpdate = true;
+
+      /* orbit particles follow their orb */
+      for (let i = 0; i < NP3; i++) {
+        partA.angles[i] += 0.024;
+        partA.pos[i*3]   = orbA.position.x + Math.cos(partA.angles[i]) * partA.radii[i];
+        partA.pos[i*3+1] = orbA.position.y + Math.sin(partA.angles[i]) * partA.radii[i] * 0.58;
+        partA.pos[i*3+2] = orbA.position.z + Math.sin(partA.angles[i] * 0.7) * 0.18;
+
+        partB.angles[i] -= 0.021;
+        partB.pos[i*3]   = orbB.position.x + Math.cos(partB.angles[i]) * partB.radii[i];
+        partB.pos[i*3+1] = orbB.position.y + Math.sin(partB.angles[i]) * partB.radii[i] * 0.58;
+        partB.pos[i*3+2] = orbB.position.z + Math.sin(partB.angles[i] * 0.7) * 0.18;
+      }
+      partA.geo.attributes.position.needsUpdate = true;
+      partB.geo.attributes.position.needsUpdate = true;
+    };
+  });
+
+  /* ══════════════════════════════════
+     sc4 / sc5 / sc6 / sc-binary — 3D CROSSROADS
+     Low-angle perspective fork road with person silhouette
+  ══════════════════════════════════ */
+  function mkCrossroads(id, C) {
+    mkScene(id, (scene, cam) => {
+      /* low-angle camera looking down the road toward the fork */
+      cam.fov = 62;
+      cam.position.set(0, 2.6, 5.5);
+      cam.lookAt(0, -0.6, -1.0);
+      cam.updateProjectionMatrix();
+
+      /* ── generate road surface mesh from a curve ── */
+      function roadMesh(curve, hw, segs, mat) {
+        const pts = curve.getPoints(segs);
+        const verts = [], idx = [];
+        pts.forEach((pt, i) => {
+          const next = pts[Math.min(i+1, pts.length-1)];
+          const prev = pts[Math.max(i-1, 0)];
+          const tangent = next.clone().sub(prev).normalize();
+          const perp = new THREE.Vector3(tangent.z, 0, -tangent.x);
+          verts.push(
+            pt.x - perp.x*hw, pt.y, pt.z - perp.z*hw,
+            pt.x + perp.x*hw, pt.y, pt.z + perp.z*hw
+          );
+          if (i > 0) {
+            const b = (i-1)*2;
+            idx.push(b, b+2, b+1,  b+1, b+2, b+3);
+          }
+        });
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
+        geo.setIndex(idx);
+        return new THREE.Mesh(geo, mat);
+      }
+
+      /* ── edge glow line at ±hw offset from curve ── */
+      function edgeLine(curve, hw, side, col, op) {
+        const pts = curve.getPoints(36).map((pt, i, arr) => {
+          const next = arr[Math.min(i+1, arr.length-1)];
+          const prev = arr[Math.max(i-1, 0)];
+          const tangent = next.clone().sub(prev).normalize();
+          const perp = new THREE.Vector3(tangent.z, 0, -tangent.x);
+          return new THREE.Vector3(pt.x + perp.x*hw*side, 0.018, pt.z + perp.z*hw*side);
+        });
+        return new THREE.Line(
+          new THREE.BufferGeometry().setFromPoints(pts),
+          new THREE.LineBasicMaterial({ color: col, transparent: true, opacity: op })
+        );
+      }
+
+      /* ── dashed centre line using LineSegments ── */
+      function dashLine(curve, col) {
+        const dashLen = 0.34, gapLen = 0.24, total = curve.getLength();
+        const pairs = [];
+        let dist = 0, on = true;
+        while (dist < total) {
+          const segLen = on ? dashLen : gapLen;
+          if (on && dist + segLen <= total) {
+            pairs.push(
+              curve.getPointAt( dist / total ),
+              curve.getPointAt( Math.min((dist + segLen) / total, 1) )
+            );
+          }
+          dist += segLen; on = !on;
+        }
+        const pts3 = pairs.map(p => new THREE.Vector3(p.x, 0.025, p.z));
+        return new THREE.LineSegments(
+          new THREE.BufferGeometry().setFromPoints(pts3),
+          new THREE.LineBasicMaterial({ color: col, transparent: true, opacity: 0.75 })
+        );
+      }
+
+      /* ── three road curves ── */
+      const stemCurve = new THREE.CatmullRomCurve3([
+        new THREE.Vector3(0, 0, 5.5),
+        new THREE.Vector3(0, 0, 2.5),
+        new THREE.Vector3(0, 0, 0),
+      ]);
+      const leftCurve = new THREE.QuadraticBezierCurve3(
+        new THREE.Vector3(0,  0,  0),
+        new THREE.Vector3(-1.4, 0, -2.5),
+        new THREE.Vector3(-5.2, 0, -5.5)
+      );
+      const rightCurve = new THREE.QuadraticBezierCurve3(
+        new THREE.Vector3(0,  0,  0),
+        new THREE.Vector3( 1.4, 0, -2.5),
+        new THREE.Vector3( 5.2, 0, -5.5)
+      );
+
+      /* ── pre-sample curves into LUT — avoids getPointAt() per particle per frame ── */
+      const LUT_N = 80;
+      function buildLUT(curve) {
+        const lut = new Float32Array(LUT_N * 4); /* x, z, perpX, perpZ */
+        for (let i = 0; i < LUT_N; i++) {
+          const t0 = i / LUT_N;
+          const t1 = Math.min((i + 1) / LUT_N, 1);
+          const p0 = curve.getPointAt(t0);
+          const p1 = curve.getPointAt(t1);
+          const dx = p1.x - p0.x, dz = p1.z - p0.z;
+          const len = Math.hypot(dx, dz) || 1;
+          lut[i*4]   = p0.x;
+          lut[i*4+1] = p0.z;
+          lut[i*4+2] =  dz / len;   /* perpX */
+          lut[i*4+3] = -dx / len;   /* perpZ */
+        }
+        return lut;
+      }
+      const LUTS = [buildLUT(stemCurve), buildLUT(leftCurve), buildLUT(rightCurve)];
+
+      /* ── road surfaces ── */
+      const RD = S(20, 12);
+      const roadMat = new THREE.MeshBasicMaterial({ color: C.road, transparent: true, opacity: 0.90, side: THREE.DoubleSide });
+      scene.add(roadMesh(stemCurve,  0.85, RD, roadMat));
+      scene.add(roadMesh(leftCurve,  0.72, RD, roadMat));
+      scene.add(roadMesh(rightCurve, 0.72, RD, roadMat));
+
+      /* ── outer edge lines ── */
+      scene.add(edgeLine(stemCurve,  0.85, -1, C.stem,  0.50));
+      scene.add(edgeLine(stemCurve,  0.85,  1, C.stem,  0.50));
+      scene.add(edgeLine(leftCurve,  0.72, -1, C.left,  0.72));
+      scene.add(edgeLine(leftCurve,  0.72,  1, C.left,  0.72));
+      scene.add(edgeLine(rightCurve, 0.72, -1, C.right, 0.72));
+      scene.add(edgeLine(rightCurve, 0.72,  1, C.right, 0.72));
+      /* inner double-line near edge for realism */
+      scene.add(edgeLine(leftCurve,  0.60, -1, C.left,  0.28));
+      scene.add(edgeLine(rightCurve, 0.60,  1, C.right, 0.28));
+
+      /* ── centre dashed lines ── */
+      scene.add(dashLine(stemCurve,  C.dashStem));
+      scene.add(dashLine(leftCurve,  C.dashLeft));
+      scene.add(dashLine(rightCurve, C.dashRight));
+
+
+      /* ── flowing particles along roads (LUT-based — no getPointAt per frame) ── */
+      const N = NP(60, 32);
+      const pPos = new Float32Array(N * 3);
+      const pData = Array.from({ length: N }, () => ({
+        t:    Math.random(),
+        side: Math.floor(Math.random() * 3),   /* 0=stem,1=left,2=right */
+        off:  (Math.random() - 0.5) * 0.55     /* lateral offset */
+      }));
+      const pGeo = new THREE.BufferGeometry();
+      pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+      scene.add(new THREE.Points(pGeo,
+        new THREE.PointsMaterial({ color: C.particle, size: 0.052, transparent: true, opacity: 0.55 })
+      ));
+      const SPEEDS = [0.0042, 0.0034, 0.0034];
+
+      let elapsed = 0;
+      return () => {
+        elapsed += 0.012;
+
+        /* subtle camera sway */
+        cam.position.x = Math.sin(elapsed * 0.14) * 0.07;
+        cam.lookAt(0, -0.6, -1.0);
+
+        /* particle flow — LUT lookup, O(N) array reads instead of curve evaluations */
+        for (let i = 0; i < N; i++) {
+          const p = pData[i];
+          p.t += SPEEDS[p.side];
+          if (p.t >= 1) {
+            p.t   -= 1;
+            p.side = Math.floor(Math.random() * 3);
+            p.off  = (Math.random() - 0.5) * 0.55;
+          }
+          const lut = LUTS[p.side];
+          const idx = (Math.floor(p.t * LUT_N) % LUT_N) * 4;
+          pPos[i*3]   = lut[idx]   + lut[idx+2] * p.off;
+          pPos[i*3+1] = 0.03;
+          pPos[i*3+2] = lut[idx+1] + lut[idx+3] * p.off;
+        }
+        pGeo.attributes.position.needsUpdate = true;
+      };
+    });
+  }
+  // Q5 — tender, soft: conversation going off-track (hurt avoidance vs compromise)
+  mkCrossroads('sc4',      { road: 0xE8D8D0, stem: 0x8C6870, left: 0xF2A0B0, right: 0xD4A8A0, dashStem: 0xF7D6DC, dashLeft: 0xF2A0B0, dashRight: 0xD4A8A0, particle: 0xF7D6DC });
+  // Q6 — warm, open: not aligned with partner (fulfill partner vs open up)
+  mkCrossroads('sc5',      { road: 0xD4B8A8, stem: 0x4A2D35, left: 0xC8405A, right: 0xC4923A, dashStem: 0xF2A0B0, dashLeft: 0xC8405A, dashRight: 0xC4923A, particle: 0xEAC898 });
+  // Q7 — assertive, contrast: opinions differ (yield vs persuade)
+  mkCrossroads('sc6',      { road: 0xC8B0A8, stem: 0x4A2D35, left: 0x7D1A2E, right: 0x8C5070, dashStem: 0xC8405A, dashLeft: 0xF2A0B0, dashRight: 0xC89AB0, particle: 0xF2A0B0 });
+  // Q8 — balanced, measured: find middle ground vs speak & listen
+  mkCrossroads('sc-binary',{ road: 0xD8C8B8, stem: 0x8C6870, left: 0xC4923A, right: 0xD4A8A0, dashStem: 0xEAC898, dashLeft: 0xC4923A, dashRight: 0xD4A8A0, particle: 0xEAC898 });
+
+  /* ══════════════════════════════════
+     sc-19 / Q11 — PETAL RAIN: gentle rose petals drifting down
+     Soft, ambient, romantic — doesn't compete with rank cards
+  ══════════════════════════════════ */
+  mkScene('sc-19', (scene, cam) => {
+    cam.position.set(0, 0, 5.5);
+    cam.lookAt(0, 0, 0);
+
+    const PETAL_COLS = [0xF2A0B0, 0xC8405A, 0xD4A8A0, 0x8C6870, 0xF7D6DC, 0xE8C8D0];
+    const COUNT = NP(32, 20);
+
+    /* ── petal teardrop shape ── */
+    const petalShape = new THREE.Shape();
+    petalShape.moveTo(0, 0);
+    petalShape.bezierCurveTo( 0.22,  0.06,  0.26, 0.30, 0, 0.48);
+    petalShape.bezierCurveTo(-0.26,  0.30, -0.22, 0.06, 0, 0);
+    const petalGeo = new THREE.ShapeGeometry(petalShape, 6);
+
+    /* ── spawn petals ── */
+    const petals = Array.from({ length: COUNT }, () => {
+      const col = PETAL_COLS[Math.floor(Math.random() * PETAL_COLS.length)];
+      const mesh = new THREE.Mesh(
+        petalGeo,
+        new THREE.MeshBasicMaterial({
+          color: col, transparent: true,
+          opacity: 0.20 + Math.random() * 0.38,
+          side: THREE.DoubleSide
+        })
+      );
+      const sc = 0.48 + Math.random() * 0.60;
+      mesh.scale.setScalar(sc);
+      const ix = (Math.random() - 0.5) * 6.5;
+      const iy = -2.8 + Math.random() * 7.0;   /* spread across full height */
+      mesh.position.set(ix, iy, (Math.random() - 0.5) * 1.8);
+      mesh.rotation.set(
+        Math.random() * Math.PI,
+        Math.random() * Math.PI,
+        Math.random() * Math.PI * 2
+      );
+      scene.add(mesh);
+      return {
+        mesh,
+        ix,                                          /* base x for sway */
+        speed:     0.006 + Math.random() * 0.007,   /* fall speed */
+        swayAmp:   0.12  + Math.random() * 0.18,    /* horizontal sway width */
+        swayFreq:  0.35  + Math.random() * 0.45,    /* sway frequency */
+        swayOff:   Math.random() * Math.PI * 2,     /* phase offset */
+        spinZ:     (Math.random() - 0.5) * 0.014,   /* slow flutter */
+        spinX:     (Math.random() - 0.5) * 0.008,
+      };
+    });
+
+    let t = 0;
+    return () => {
+      t += 0.012;
+      petals.forEach(p => {
+        /* drift downward */
+        p.mesh.position.y -= p.speed;
+        /* gentle side sway */
+        p.mesh.position.x  = p.ix + Math.sin(t * p.swayFreq + p.swayOff) * p.swayAmp;
+        /* slow flutter rotation */
+        p.mesh.rotation.z += p.spinZ;
+        p.mesh.rotation.x += p.spinX;
+        /* recycle petal back to top when it exits below */
+        if (p.mesh.position.y < -3.2) {
+          p.mesh.position.y = 3.8 + Math.random() * 1.5;
+          p.ix = (Math.random() - 0.5) * 6.5;
+          p.mesh.position.x = p.ix;
+        }
+      });
+    };
+  });
+
+  /* ══════════════════════════════════
+     sc-q9 / Q9 — AWKWARD: wobbly TorusKnot
+  ══════════════════════════════════ */
+  mkScene('sc-q9', (scene, cam) => {
+    cam.position.z = 5.5;
+    const knot = mkWire(new THREE.TorusKnotGeometry(0.88, 0.24, S(60,38), 8), 0xC8405A, 0.09, 0.52);
+    scene.add(knot);
+    const N = NP(35, 18), kPos = new Float32Array(N*3), kVel = [];
+    for (let i = 0; i < N; i++) {
+      kPos[i*3]   = (Math.random()-0.5)*6.5; kPos[i*3+1] = (Math.random()-0.5)*5.5; kPos[i*3+2] = (Math.random()-0.5)*2;
+      kVel.push({ x:(Math.random()-0.5)*0.007, y:(Math.random()-0.5)*0.007 });
+    }
+    const kGeo = new THREE.BufferGeometry(); kGeo.setAttribute('position', new THREE.BufferAttribute(kPos, 3));
+    scene.add(new THREE.Points(kGeo, new THREE.PointsMaterial({ color: 0xF2A0B0, size: 0.062, transparent: true, opacity: 0.50 })));
+    let t = 0;
+    return () => {
+      t += 0.014;
+      knot.rotation.x = Math.sin(t*0.82)*0.55 + t*0.30;
+      knot.rotation.y = Math.cos(t*0.62)*0.44 + t*0.22;
+      knot.rotation.z = Math.sin(t*1.24)*0.30;
+      const w = 1 + Math.sin(t*2.6)*0.065;
+      knot.scale.set(w, w + Math.sin(t*3.1)*0.04, w);
+      for (let i = 0; i < N; i++) {
+        kPos[i*3] += kVel[i].x; kPos[i*3+1] += kVel[i].y;
+        if (Math.abs(kPos[i*3])   > 3.4) kVel[i].x *= -1;
+        if (Math.abs(kPos[i*3+1]) > 2.9) kVel[i].y *= -1;
+      }
+      kGeo.attributes.position.needsUpdate = true;
+    };
+  });
+
+  /* ══════════════════════════════════
+     sc-q10 / Q10 — DUAL ORBIT: torus + icosahedron orbiting, near-missing, proximity glow
+  ══════════════════════════════════ */
+  mkScene('sc-q10', (scene, cam) => {
+    cam.position.z = 5.8;
+
+    const COL_A = 0xC8405A;  /* rose — editorial palette  */
+    const COL_B = 0xC89AB0;  /* mauve — editorial palette */
+
+    /* ── Object A: Tilted torus ── */
+    const torusGrp = new THREE.Group();
+    scene.add(torusGrp);
+    torusGrp.add(new THREE.Mesh(
+      new THREE.TorusGeometry(0.62, 0.175, 6, S(42,28)),
+      new THREE.MeshBasicMaterial({ color: COL_A, transparent: true, opacity: 0.09, side: THREE.DoubleSide })
+    ));
+    torusGrp.add(new THREE.Mesh(
+      new THREE.TorusGeometry(0.62, 0.175, 6, S(42,28)),
+      new THREE.MeshBasicMaterial({ color: COL_A, transparent: true, opacity: 0.48, wireframe: true })
+    ));
+    torusGrp.rotation.x = Math.PI / 3;  /* initial tilt shows 3-D shape immediately */
+
+    /* ── Object B: Icosahedron ── */
+    const icoGrp = new THREE.Group();
+    scene.add(icoGrp);
+    const icoFill = new THREE.Mesh(
+      new THREE.IcosahedronGeometry(0.36, 1),
+      new THREE.MeshBasicMaterial({ color: COL_B, transparent: true, opacity: 0.10, side: THREE.DoubleSide })
+    );
+    const icoWire = new THREE.Mesh(
+      new THREE.IcosahedronGeometry(0.36, 1),
+      new THREE.MeshBasicMaterial({ color: COL_B, transparent: true, opacity: 0.50, wireframe: true })
+    );
+    icoGrp.add(icoFill, icoWire);
+
+    /* ── Proximity connection line (fades in on near-miss) ── */
+    const lBuf = new Float32Array(6);
+    const lGeo = new THREE.BufferGeometry();
+    lGeo.setAttribute('position', new THREE.BufferAttribute(lBuf, 3));
+    const lMat = new THREE.LineBasicMaterial({ color: 0xF2A0B0, transparent: true, opacity: 0 });
+    scene.add(new THREE.Line(lGeo, lMat));
+
+    /* ── Ambient particles drifting in the background ── */
+    const NPQ10 = NP(28, 16);
+    const pA  = Array.from({ length: NPQ10 }, (_, i) => (i / NPQ10) * Math.PI * 2);
+    const pR  = pA.map(() => 1.75 + Math.random() * 0.72);
+    const pSp = pA.map(() => 0.0018 + Math.random() * 0.0016);
+    const pZ  = pA.map(() => (Math.random() - 0.5) * 1.4);
+    const pPos = new Float32Array(NPQ10 * 3);
+    const pGeo = new THREE.BufferGeometry();
+    pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+    scene.add(new THREE.Points(pGeo, new THREE.PointsMaterial({
+      color: COL_A, size: 0.040, transparent: true, opacity: 0.28
+    })));
+
+    const OR = 1.12;  /* orbital radius */
+    let angA = 0, angB = Math.PI, t = 0;
+
+    return () => {
+      t += 0.007;
+
+      /* opposing orbital directions on different planes for 3-D near-miss */
+      angA += 0.0080;
+      angB -= 0.0062;
+
+      torusGrp.position.set(
+        Math.cos(angA) * OR,
+        Math.sin(angA * 0.55) * 0.38,
+        Math.sin(angA) * OR * 0.48
+      );
+      icoGrp.position.set(
+        Math.cos(angB) * OR * 0.88,
+        Math.sin(angB * 0.65) * 0.44,
+        Math.sin(angB) * OR * 0.52
+      );
+
+      /* self-rotation — torus rocks, ico tumbles */
+      torusGrp.rotation.y += 0.011;
+      torusGrp.rotation.z += 0.005;
+      icoGrp.rotation.y   += 0.009;
+      icoGrp.rotation.x   += 0.007;
+
+      /* proximity detection → scale boost + fill brighten + line fade-in */
+      const dx = torusGrp.position.x - icoGrp.position.x;
+      const dy = torusGrp.position.y - icoGrp.position.y;
+      const dz = torusGrp.position.z - icoGrp.position.z;
+      const dist = Math.sqrt(dx*dx + dy*dy + dz*dz);
+      const prox = Math.max(0, 1 - dist / 1.4);           /* 0 → 1 as objects close in  */
+      const sc   = 1 + prox * 0.13;
+      torusGrp.scale.setScalar(sc);
+      icoGrp.scale.setScalar(sc);
+      icoFill.material.opacity = 0.10 + prox * 0.10;
+      lMat.opacity = prox * 0.30;
+      lBuf[0] = torusGrp.position.x; lBuf[1] = torusGrp.position.y; lBuf[2] = torusGrp.position.z;
+      lBuf[3] = icoGrp.position.x;   lBuf[4] = icoGrp.position.y;   lBuf[5] = icoGrp.position.z;
+      lGeo.attributes.position.needsUpdate = true;
+
+      /* drift ambient particles */
+      for (let i = 0; i < NPQ10; i++) {
+        pA[i] += pSp[i];
+        pPos[i*3]   = Math.cos(pA[i]) * pR[i];
+        pPos[i*3+1] = Math.sin(pA[i]) * pR[i] * 0.52;
+        pPos[i*3+2] = pZ[i];
+      }
+      pGeo.attributes.position.needsUpdate = true;
+    };
+  });
+
+})();
+
+/* ═══════════════════════════════════════════════════════
+   STACKING CARDS TRANSITION  (Option 6)
+   Last question card + history cards cascade to a deck,
+   then the result polaroid rises from within the stack.
+═══════════════════════════════════════════════════════ */
+function triggerStackingTransition() {
+  /* ── overlay shell ─────────────────────────── */
+  const overlay = document.createElement('div');
+  overlay.style.cssText = [
+    'position:fixed;inset:0;z-index:4000;',
+    'background:#FEFCFA;',
+    'opacity:0;transition:opacity 0.35s ease;',
+    'overflow:hidden;',
+  ].join('');
+
+  /* soft rose radial bg */
+  const bgEl = document.createElement('div');
+  bgEl.style.cssText = [
+    'position:absolute;inset:0;',
+    'background:radial-gradient(ellipse at 50% 40%, rgba(200,64,90,0.10) 0%, rgba(242,160,176,0.06) 50%, transparent 80%);',
+  ].join('');
+  overlay.appendChild(bgEl);
+
+  /* Three.js canvas */
+  const canvas = document.createElement('canvas');
+  canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;';
+  overlay.appendChild(canvas);
+
+  /* ── DOM result polaroid (rises over the deck) ─ */
+  const polaroidWrap = document.createElement('div');
+  polaroidWrap.style.cssText = [
+    'position:absolute;left:50%;bottom:-380px;',
+    'transform:translateX(-50%) rotate(2.5deg);',
+    'width:min(220px,calc(100vw - 80px));',
+    'z-index:20;opacity:0;transition:none;',
+    'will-change:bottom,opacity;',
+  ].join('');
+  polaroidWrap.innerHTML = `
+    <div style="
+      background:linear-gradient(180deg,#f7ede0 0%,#ede2d0 100%);
+      border-radius:14px;padding:8px 8px 22px;
+      box-shadow:rgba(200,64,90,0.12) 0 8px 32px,
+                 rgba(0,0,0,0.06) 0 2px 8px;
+    ">
+      <div style="border-radius:8px;overflow:hidden;height:158px;position:relative;">
+        <div style="position:absolute;inset:0;
+          background:linear-gradient(145deg,#FDF0F2 0%,#F2A0B0 50%,#C8405A 100%);"></div>
+        <div style="position:absolute;bottom:0;left:-40%;width:180%;height:60%;
+          background:radial-gradient(50% 50%,rgba(200,64,90,0.25) 20%,rgba(200,64,90,0));"></div>
+        <div style="position:absolute;bottom:0;right:-40%;width:130%;height:50%;
+          background:radial-gradient(50% 50%,rgba(196,146,58,0.18),rgba(196,146,58,0));"></div>
+        <div style="position:absolute;bottom:0;left:0;right:0;padding:20px 8px 7px;
+          background:linear-gradient(transparent,rgba(28,16,22,0.45));
+          font-size:10px;font-weight:500;color:#fff;text-align:center;
+          font-family:'DM Sans',sans-serif;letter-spacing:0.04em;">
+          Avoidant · Competitive</div>
+      </div>
+    </div>`;
+  overlay.appendChild(polaroidWrap);
+
+  document.body.appendChild(overlay);
+
+  /* fade-in overlay, then kick off Three.js */
+  requestAnimationFrame(() => {
+    overlay.style.opacity = '1';
+    setTimeout(() => _runStackingAnimation(canvas, overlay, polaroidWrap), 120);
+  });
+}
+
+function _runStackingAnimation(canvas, overlay, polaroidWrap) {
+  const W   = window.innerWidth;
+  const H   = window.innerHeight;
+  const DPR = Math.min(window.devicePixelRatio, 2);
+
+  const isMobStack = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: !isMobStack, alpha: true });
+  renderer.setSize(W, H);
+  renderer.setPixelRatio(Math.min(DPR, isMobStack ? 1.5 : 2));
+  renderer.shadowMap.enabled = false; /* cards use MeshBasicMaterial — no shadows needed */
+
+  const scene  = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(38, W / H, 0.1, 60);
+  camera.position.set(0, 0, 9);
+
+  /* ── lights ── */
+  scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+  const key = new THREE.DirectionalLight(0xfff5e8, 1.6);
+  key.position.set(2, 4, 7);
+  key.castShadow = true;
+  key.shadow.mapSize.set(512, 512);
+  key.shadow.camera.near = 1; key.shadow.camera.far = 20;
+  [-4, 4].forEach(v => { key.shadow.camera.left = key.shadow.camera.bottom = v; });
+  key.shadow.camera.right = key.shadow.camera.top = 4;
+  scene.add(key);
+  const fill = new THREE.DirectionalLight(0xF2A0B0, 0.30);
+  fill.position.set(-3, -2, 5);
+  scene.add(fill);
+
+  /* ── shadow floor ── */
+  const floor = new THREE.Mesh(
+    new THREE.PlaneGeometry(20, 20),
+    new THREE.ShadowMaterial({ opacity: 0.28 })
+  );
+  floor.rotation.x = -Math.PI / 2;
+  floor.position.y = -4.2;
+  floor.receiveShadow = true;
+  scene.add(floor);
+
+  /* ── card geometry & texture factory ── */
+  const CW = 2.0, CH = 2.68, CD = 0.05;
+
+  const Q_GRADS = [
+    ['#FDF0F2','#C8405A'], ['#F5EDE8','#8C6870'], ['#FDF0F2','#F2A0B0'],
+    ['#FBF6F0','#C4923A'], ['#F5EAF0','#8C5070'], ['#FBF6F0','#EAC898'],
+    ['#F5EDE8','#D4A8A0'], ['#FBF6F0','#C4923A'], ['#F7D6DC','#C8405A'],
+    ['#F9E8EC','#7D1A2E'], ['#F5EAF0','#C89AB0'],
+  ];
+
+  function makeGradTex(top, bot) {
+    const c = document.createElement('canvas');
+    c.width = 256; c.height = 350;
+    const ctx = c.getContext('2d');
+    const g = ctx.createLinearGradient(0, 0, 0, 350);
+    g.addColorStop(0, top); g.addColorStop(1, bot);
+    ctx.fillStyle = g; ctx.fillRect(0, 0, 256, 350);
+    /* rose glow */
+    const r1 = ctx.createRadialGradient(30, 350, 0, 30, 350, 180);
+    r1.addColorStop(0, 'rgba(200,64,90,0.22)'); r1.addColorStop(1, 'rgba(200,64,90,0)');
+    ctx.fillStyle = r1; ctx.fillRect(0, 0, 256, 350);
+    /* gold glow */
+    const r2 = ctx.createRadialGradient(226, 350, 0, 226, 350, 150);
+    r2.addColorStop(0, 'rgba(196,146,58,0.18)'); r2.addColorStop(1, 'rgba(196,146,58,0)');
+    ctx.fillStyle = r2; ctx.fillRect(0, 0, 256, 350);
+    /* subtle inner border */
+    ctx.strokeStyle = 'rgba(200,64,90,0.15)';
+    ctx.lineWidth = 7; ctx.strokeRect(3.5, 3.5, 249, 343);
+    return new THREE.CanvasTexture(c);
+  }
+
+  function makeBackTex() {
+    const c = document.createElement('canvas');
+    c.width = 256; c.height = 350;
+    const ctx = c.getContext('2d');
+    const g = ctx.createLinearGradient(0, 0, 0, 350);
+    g.addColorStop(0, '#ffffff'); g.addColorStop(1, '#e5e5e5');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, 256, 350);
+    return new THREE.CanvasTexture(c);
+  }
+
+  /* visible scene height at z=0 with this camera */
+  const visH = 2 * Math.tan(19 * Math.PI / 180) * camera.position.z;
+  /* deck rests near bottom: top of bottom-most card sits at ~-2.0 */
+  const DECK_Y = -(visH / 2) + CH * 0.78;
+
+  /* ── build 11 question cards ── */
+  const NUM_CARDS = 11;
+  const cardMeshes = [];
+
+  for (let i = 0; i < NUM_CARDS; i++) {
+    const [top, bot] = Q_GRADS[i % Q_GRADS.length];
+    const geo  = new THREE.BoxGeometry(CW, CH, CD);
+    const mats = [
+      new THREE.MeshLambertMaterial({ color: 0xf0e4e8 }),
+      new THREE.MeshLambertMaterial({ color: 0xf0e4e8 }),
+      new THREE.MeshLambertMaterial({ color: 0xfbf6f0 }),
+      new THREE.MeshLambertMaterial({ color: 0xfbf6f0 }),
+      new THREE.MeshPhongMaterial({ map: makeGradTex(top, bot), shininess: 35 }),
+      new THREE.MeshPhongMaterial({ map: makeBackTex(), shininess: 18 }),
+    ];
+    const mesh = new THREE.Mesh(geo, mats);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    mesh.position.set(0, 2.0, -i * 0.06);  /* start above center */
+    mesh.visible = false;
+    scene.add(mesh);
+    cardMeshes.push(mesh);
+  }
+
+  /* ── easing helpers ── */
+  function eOut3(t)   { return 1 - (1 - t) ** 3; }
+  function eIO3(t)    { return t < 0.5 ? 4*t*t*t : 1 - ((-2*t+2)**3)/2; }
+  function lerp(a, b, t) { return a + (b - a) * t; }
+
+  /* ── per-card stack targets ── */
+  const stackTargets = cardMeshes.map((_, i) => ({
+    y:  DECK_Y + i * 0.028,
+    z:  -i * 0.05,
+    rz: (i % 2 === 0 ? 1 : -1) * (0.018 + i * 0.007),
+    rx: -0.04,
+  }));
+
+  /* ── timing constants (seconds) ── */
+  const ENTER_START    = 0.25;
+  const ENTER_DUR      = 0.60;
+  const STAGGER        = 0.10;
+  const COMPRESS_START = ENTER_START + NUM_CARDS * STAGGER + ENTER_DUR - 0.25;
+  const COMPRESS_DUR   = 0.70;
+  const SHUFFLE_START  = COMPRESS_START + COMPRESS_DUR + 0.05;
+  const RESULT_START   = SHUFFLE_START + 0.55;
+  const FADEOUT_START  = RESULT_START  + 1.90;
+
+  let elapsed      = 0;
+  let resultShown  = false;
+  let navScheduled = false;
+  let animStopped  = false;
+  let lastTime     = performance.now();
+
+  function tick(now) {
+    if (animStopped) return;
+    const dt = Math.min((now - lastTime) / 1000, 0.05);
+    lastTime = now;
+    elapsed += dt;
+
+    /* ── Phase 1: cards enter from above, cascade to stack ── */
+    cardMeshes.forEach((mesh, i) => {
+      const enterAt = ENTER_START + i * STAGGER;
+      if (elapsed < enterAt) return;
+
+      mesh.visible = true;
+      const tgt = stackTargets[i];
+      let targetY  = tgt.y;
+      let targetRz = tgt.rz;
+      let targetZ  = tgt.z;
+
+      /* Phase 2: compress */
+      if (elapsed >= COMPRESS_START) {
+        const ct  = Math.min(1, (elapsed - COMPRESS_START) / COMPRESS_DUR);
+        const cet = eIO3(ct);
+        targetY  = lerp(tgt.y,  DECK_Y + i * 0.016,                           cet);
+        targetRz = lerp(tgt.rz, (i % 2 === 0 ? 1 : -1) * i * 0.006,          cet);
+        targetZ  = lerp(tgt.z,  -i * 0.06,                                     cet);
+      }
+
+      /* Phase 3: shuffle wobble */
+      if (elapsed >= SHUFFLE_START) {
+        const st    = elapsed - SHUFFLE_START;
+        const decay = Math.exp(-st * 2.8);
+        const wobble = Math.sin(st * 6.2 + i * 1.15) * 0.014 * decay;
+        mesh.rotation.z = targetRz + wobble;
+        mesh.position.y = targetY + Math.sin(st * 5.1 + i * 0.75) * 0.007 * decay;
+        mesh.position.z = targetZ;
+        mesh.rotation.x = tgt.rx;
+        return;
+      }
+
+      /* plain enter */
+      const et = eOut3(Math.min(1, (elapsed - enterAt) / ENTER_DUR));
+      mesh.position.y  = lerp(2.0, targetY,  et);
+      mesh.position.z  = targetZ;
+      mesh.rotation.z  = lerp(0,   targetRz, et);
+      mesh.rotation.x  = tgt.rx;
+    });
+
+    /* ── Phase 4: DOM polaroid rises ── */
+    if (elapsed >= RESULT_START && !resultShown) {
+      resultShown = true;
+      polaroidWrap.style.transition =
+        'bottom 1.35s cubic-bezier(0.22,1,0.36,1), opacity 0.55s ease';
+      polaroidWrap.style.bottom  = '33%';
+      polaroidWrap.style.opacity = '1';
+    }
+
+    /* ── Phase 5: fade out & navigate ── */
+    if (elapsed >= FADEOUT_START && !navScheduled) {
+      navScheduled = true;
+      overlay.style.transition      = 'opacity 0.65s ease';
+      overlay.style.opacity         = '0';
+      polaroidWrap.style.transition = 'opacity 0.65s ease';
+      polaroidWrap.style.opacity    = '0';
+      setTimeout(() => {
+        animStopped = true;
+        renderer.dispose();
+        window.location.href = 'result.html';
+      }, 680);
+    }
+
+    renderer.render(scene, camera);
+    requestAnimationFrame(tick);
+  }
+
+  requestAnimationFrame(tick);
+}
+
+render();
+</script>
+</body>
+</html>
